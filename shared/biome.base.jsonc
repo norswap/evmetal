@@ -1,0 +1,87 @@
+{
+    "$schema": "../node_modules/@biomejs/biome/configuration_schema.json",
+    "files": {
+        "includes": ["**", "!**/dist"]
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineEnding": "lf",
+        "lineWidth": 120,
+        "attributePosition": "auto"
+    },
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    },
+    "linter": {
+        "enabled": true,
+        "domains": {
+            "solid": "all"
+        },
+        "rules": {
+            "recommended": true,
+            "nursery": {
+                "useSortedClasses": "off"
+            },
+            "correctness": {
+                "noUnusedVariables": {
+                    "level": "warn",
+                    "fix": "unsafe"
+                },
+                "useHookAtTopLevel": "error",
+                "noUnusedImports": {
+                    "level": "warn",
+                    "fix": "unsafe"
+                }
+            },
+            "style": {
+                "noNamespace": "error",
+                "noNonNullAssertion": "off",
+                "useTemplate": "off",
+                "noUselessElse": "off",
+                "noParameterAssign": "off"
+            },
+            "complexity": {
+                "noForEach": "off",
+                "noUselessSwitchCase": "off"
+            },
+            "suspicious": {
+                "noConfusingLabels": "off",
+                "noAssignInExpressions": "off"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "quoteProperties": "asNeeded",
+            "trailingCommas": "all",
+            "semicolons": "asNeeded",
+            "arrowParentheses": "asNeeded",
+            "bracketSpacing": true,
+            "bracketSameLine": false,
+            "quoteStyle": "double"
+        }
+    },
+    "overrides": [
+        {
+            // Extended tsconfigs can be JSONC however they can't use the proper .jsonc extension and therfore are invalid
+            // JSON. This fixes that.
+            "includes": ["./**/tsconfig.*.json", "./**/tsconfig.json"],
+            "json": {
+                "parser": {
+                    "allowComments": true,
+                    "allowTrailingCommas": true
+                },
+                "formatter": {
+                    "trailingCommas": "none"
+                }
+            }
+        }
+    ]
+}

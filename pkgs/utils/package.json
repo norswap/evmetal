@@ -1,0 +1,42 @@
+{
+    "name": "@norswap/utils",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "imports": {
+        "#src/*": "./src/*"
+    },
+    "exports": {
+        ".": {
+            "bun": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            },
+            "development": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            },
+            "default": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        }
+    },
+    "files": [
+        "src",
+        "dist",
+        "package.json"
+    ],
+    "scripts": {
+        "build": "make setup && bun build.ts all",
+        "lint": "biome check",
+        "lintfix": "bunx sort-package-json && biome check --fix",
+        "make": "make",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:"
+    }
+}

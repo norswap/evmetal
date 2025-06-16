@@ -1,0 +1,37 @@
+{
+    "$schema": "https://turborepo.com/schema.json",
+    "tasks": {
+        "//#setup:bun": {
+            "cache": false
+        },
+        "setup": {
+            "dependsOn": ["^setup", "//#setup:bun"],
+            "cache": false
+        },
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": ["dist/**"],
+            "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/shared/tsconfig.base.json"]
+        },
+        "transit": {
+            "dependsOn": ["^transit"]
+        },
+        "clean": {
+            "cache": false
+        },
+        "make": {
+            "dependsOn": ["^make"]
+        },
+        "typecheck": {
+            "dependsOn": ["^transit", "^build"]
+        },
+        "lint": {
+            "dependsOn": ["^transit"],
+            "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/shared/biome.jsonc"]
+        },
+        "lintfix": {
+            "dependsOn": ["^transit"],
+            "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/shared/biome.jsonc"]
+        }
+    }
+}

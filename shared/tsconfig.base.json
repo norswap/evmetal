@@ -1,0 +1,52 @@
+// https://www.typescriptlang.org/tsconfig/
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Default",
+    "compilerOptions": {
+        // Enable latest features
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleDetection": "force",
+        "resolveJsonModule": true,
+
+        // Solid.js
+        "jsx": "preserve",
+        "jsxImportSource": "solid-js",
+
+        // Output & bundler mode
+        "outDir": "${configDir}/dist",
+        "incremental": true, // in practice, insignificant speed gains
+        "composite": true, // needed for project references
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "declaration": true,
+        "declarationMap": true,
+        "isolatedDeclarations": true, // makes .d.ts generation much faster
+        "isolatedModules": true, // avoid problems with bundlers that work file-by-file
+        "allowJs": false, // incompatible with isolatedModules
+        "emitDeclarationOnly": true, // only emit .d.ts files, not .js (we use bundlers for that)
+        // We'd do `"noEmit": true` normally, as we don't actually use tsc to generate `.d.ts` files.
+        // However usage of project reference for typechecking forbids `noEmit`, even if nothing is actually emitted
+        // (as we build the `.d.ts` with bunup instead of tsc.
+        "customConditions": ["development"],
+        // We define the "development" conditional export in `package.json to point entry point & types to `index.ts`
+        // so that we can type-check and get LSP support without having built the local (monorepo) dependenciees.
+
+        // Best practices
+        "strict": true,
+        "skipLibCheck": true, // way too slow, + modules have problems
+        "verbatimModuleSyntax": true, // type-only imports removed, everything else kept (not relevant when bundling)
+
+        // Stop busting my balls
+        "noFallthroughCasesInSwitch": false,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "forceConsistentCasingInFileNames": true,
+
+        // Enable decorators
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "name": "bun-plugin-solid",
+    "version": "1.4.0",
+    "description": "A plugin to compile Solid.js with Bun.",
+    "license": "MIT",
+    "author": "Norswap & Daniel Sanchez",
+    "type": "module",
+    "exports": {
+        ".": {
+            "bun": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            }
+        }
+    },
+    "files": [
+        "src",
+        "package.json"
+    ],
+    "scripts": {
+        "lint": "biome check",
+        "lintfix": "bunx sort-package-json && biome check --fix",
+        "make": "make",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@babel/core": "^7.28.5",
+        "@babel/preset-typescript": "^7.28.5",
+        "babel-preset-solid": "^1.9.10"
+    },
+    "devDependencies": {
+        "@types/babel__core": "^7.20.5",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:"
+    }
+}

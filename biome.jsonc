@@ -1,0 +1,13 @@
+{
+    "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["./shared/biome.base.jsonc"],
+    "files": {
+        "includes": [
+            // packages will manage their own configs
+            "!pkgs",
+            "!.claude",
+            "!.turbo",
+            "!.vscode"
+        ]
+    }
+}
