@@ -1,6 +1,6 @@
 {
     "extends": ["../../shared/tsconfig.base.json"],
-    "include": ["src", "./package.json"],
+    "include": ["src", "./package.json", "*.ts"],
     "compilerOptions": {
         "paths": {
             "#src/*": ["./src/*"]

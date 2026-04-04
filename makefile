@@ -66,7 +66,7 @@ refresh-deps: ## Update dependencies for manually edited package.json files, war
 		echo "If this shows outdated 'target' updates," && \
 		echo "then continuing means the package will be updated regardless." && \
 		echo "Abort with ctrl+c if you are not confortable with the implications." && \
-		echo "Consider temporarily switching to a fixed version for the affected packages."
+		echo "Consider temporarily switching to a fixed version for the affected packages." \
 		make update)
 	bun install
 .PHONY: refresh-lockfile
