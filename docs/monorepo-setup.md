@@ -15,9 +15,9 @@
     - Tasks are configured in `/turbo.json` and in individual `package.json`'s `"scripts"` section.
        - The script implements the local (per-package) task, the Turbo tasks sets up the dependency graph.
        - The make rules call Turbo to make sure everything is done following the dependency graph.
-    - Tuborepo should never be invoked directly, neither should the scripts (see below).
+    - **Tuborepo should NEVER EVER be invoked directly, neither should the scripts (see below).**
+        - If you cannot figure out how to do your work without this, stop and ask. 
     - If dependencies are not involved, no `package.json` script or Turbo task should be added.
-        - Only use a makefile command for tasks that do not involve recursively running on dependencies.
     - To run a makefile command in every package, you can run `turbo make -- <command>`, or
       `turbo make --cache=local: -- <command>` if the results shouldn't be cached.
 
@@ -40,10 +40,3 @@ Enables using Bun along with Solid.js.
 Shared utility functions that can be used from other packages.
 At the moment, these are type-level transformation utilities and array utilities.
 The `pkgs/utils/src/index.ts` can be consulted for an overview of available exports.
-
-## `pkgs/nordo` package
-
-This packages implements a simple todo-list web app, similar to the famous TodoMVC.
-The app is local-only and store its state inside IndexedDB (wrapped in `db.ts`).
-
-The app uses Typescript, Solid.js, Park-UI for elements whenever appropriate and PandaCSS for further styles.
