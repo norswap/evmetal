@@ -1,0 +1,27 @@
+{
+    "name": "@evmetal/wallet-core",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "imports": {
+        "#src/*": "./src/*"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "make clean && make setup && bun build.ts",
+        "lint": "biome check",
+        "lintfix": "bunx sort-package-json && biome check --fix",
+        "make": "make",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@bunup/dts": "catalog:",
+        "@norswap/utils": "workspace:",
+        "@types/bun": "catalog:"
+    },
+    "devDependencies": {
+        "typescript": "catalog:"
+    }
+}
