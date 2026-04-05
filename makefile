@@ -41,11 +41,11 @@ reset: nuke setup ## nuke + setup
 .PHONY: reset
 
 lint: ## Runs linting & format checks but does not make any changes, across the workspace.
-	bunx turbo lint
+	bunx turbo lint --log-order=grouped
 .PHONY: lint
 
 lintfix: ## Fixes linting and formatting issues, across the workspace.
-	bunx turbo lintfix
+	bunx turbo lintfix --log-order=grouped
 .PHONY: lintfix
 
 ########################################################################################################################
