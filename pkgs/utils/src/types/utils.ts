@@ -54,3 +54,20 @@ export type RecursiveReplace<T, Src, Dst> = Prettify<{
 export type Distribute<T> = {
     [K in Keys<T>]: T extends Record<K, infer U> ? U : never
 }
+
+/**
+ * Deeply replaces subtypes of `string` and `number` by the primitive type, giving a type suitable for JSON
+ * serialization.
+ *
+ * Tuples are widened to arrays since `infer U` loses positional info. For tuple preservation, we'd need a branch with
+ * `T extends readonly [...infer Items]` with mapped recursion over Items, which gets considerably more complex.
+ */
+export type Serialize<T> = T extends string
+    ? string
+    : T extends number
+      ? number
+      : T extends readonly (infer U)[]
+        ? Serialize<U>[]
+        : T extends object
+          ? { [K in keyof T]: Serialize<T[K]> }
+          : T
