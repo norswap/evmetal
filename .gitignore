@@ -40,6 +40,6 @@ dist
 # Turborepo
 .turbo
 
-## Panda
-styled-system
-styled-system-studio
+# Hack fixes
+ # cf. biome-jetbrains-fix in makefile
+docs/biome.jsonc

@@ -79,3 +79,10 @@ refresh-deps: ## Update dependencies for manually edited package.json files, war
 ccusage: ## Check Claude Code usage
 	bunx ccusage
 .PHONY: ccusage
+
+biome-jetbrains-fix: ## Dirtyfix for JetBrains Biome integration: can point the settings to docs/biome.jsonc.
+	ln -f shared/biome.base.jsonc docs/biome.jsonc
+.PHONY: biome-jetbrains-fix
+# The issue is that it wants a file that is not an extender and is called `biome.json[c]`.
+# Calling the file `shared/biome.jsonc` causes problem with Biome CLI invocation (nested config), which can only
+# be resolved by ignoring the entire `shared` dir, losing linting for it.
