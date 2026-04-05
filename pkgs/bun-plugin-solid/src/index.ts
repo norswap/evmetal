@@ -98,7 +98,7 @@ function SolidPlugin_(opts: SolidPluginOptions = {}, isDefault = false): BunPlug
                 const end = performance.now()
                 debugLog(`Transformed: ${path} in ${Math.round(end - start)}ms`)
 
-                if (!result || !result.code) {
+                if (!result?.code) {
                     throw Error(`No code for: ${path}`)
                 }
 

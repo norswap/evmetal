@@ -10,7 +10,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "make clean && make setup && bun build.ts",
+        "build": "make clean && make setup && bun build.ts all",
         "lint": "biome check",
         "lintfix": "bunx sort-package-json && biome check --fix",
         "make": "make",

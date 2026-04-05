@@ -1,6 +1,6 @@
 ﻿import { generateDts } from "@bunup/dts"
 
-const target = Bun.argv.length > 3 ? "all" : Bun.argv[2]
+const target = Bun.argv.length < 3 ? "all" : Bun.argv[2]
 
 if (target === "all" || target === "js") {
     const result = await Bun.build({
