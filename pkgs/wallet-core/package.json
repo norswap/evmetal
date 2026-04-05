@@ -19,7 +19,8 @@
     "dependencies": {
         "@bunup/dts": "catalog:",
         "@norswap/utils": "workspace:",
-        "@types/bun": "catalog:"
+        "@types/bun": "catalog:",
+        "viem": "^2.47.6"
     },
     "devDependencies": {
         "typescript": "catalog:"
