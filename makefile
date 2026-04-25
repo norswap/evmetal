@@ -28,7 +28,7 @@ typecheck: ## Runs TypeScript typecheck, targetin a package if `pkg=<package>` i
 .PHONY: typecheck
 
 clean: ## Remove TypeScript outputs, targeting a package if `pkg=<package>` is specified
-	$(call with_pkg_or , make clean , turbo make --cache=local: -- clean)
+	$(call with_pkg_or , make clean , bunx turbo make --cache=local: -- clean)
 .PHONY: clean
 
 nuke: ## clean + removes all derived files (e.g. node_modules, Turborepo caches)
@@ -86,3 +86,5 @@ biome-jetbrains-fix: ## Dirtyfix for JetBrains Biome integration: can point the 
 # The issue is that it wants a file that is not an extender and is called `biome.json[c]`.
 # Calling the file `shared/biome.jsonc` causes problem with Biome CLI invocation (nested config), which can only
 # be resolved by ignoring the entire `shared` dir, losing linting for it.
+# When IntelliJ update, might need to reconfigure the path to the settings file (even if it still points at the correct
+# directory — bugs be bugging).

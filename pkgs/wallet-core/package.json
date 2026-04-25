@@ -17,12 +17,12 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@bunup/dts": "catalog:",
         "@norswap/utils": "workspace:",
-        "@types/bun": "catalog:",
         "viem": "^2.47.6"
     },
     "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@types/bun": "catalog:",
         "typescript": "catalog:"
     }
 }

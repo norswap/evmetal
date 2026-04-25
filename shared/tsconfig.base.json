@@ -47,6 +47,9 @@
 
         // Enable decorators
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+
+        // Debugging
+        "noErrorTruncation": true
     }
 }
