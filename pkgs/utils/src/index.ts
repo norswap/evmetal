@@ -1,6 +1,9 @@
 export { array, last, uniques } from "#src/arrays"
 export { debounce } from "#src/debounce"
 
+export type { Fn, Lazy } from "#src/functions"
+export { force } from "#src/functions"
+
 export type { ArrayObserver, ArrayUpdate, MapObserver, MapUpdate, Observer } from "#src/observable"
 export { Observable, ObservableArray, ObservableMap } from "#src/observable"
 
