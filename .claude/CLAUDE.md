@@ -7,7 +7,7 @@
     - If you need to run commands in another directory (for instance to run makefile command in a specific package),
       use a subshell with parentheses, e.g. `(cd pkgs/utils && bun install solid-js)`.
 - **NEVER swallow errors! Every error must be explicitly handled or propagated.**
-- **NEVER, EVER switch branches, push or pull.**
+- **NEVER, EVER switch branches, stage files, commit, push or pull.**
 - **We use Bun for everything, NEVER use npm/yarn/pnpm command, always use the Bun equivalent (e.g. `bunx` for `npx`).**
     - **Caveat: Remember to use makefile commands instead of Bun directly when applicable!**
 
@@ -32,10 +32,15 @@
 - You may also divide an implementation in sections with a comment describing the purpose of next section.
 - Never add "useless comments" in implementations that are a restatement of an obvious line of code.
   Comments are reserved for tricky non-obvious code and explaining the purpose of an entire code section.
+- Do not gratuitously rewrite existing comments or remove existing details from them. Only rewrite when they no longer
+  accurately describe the code or behaviour. You may add additional details to them — priortize appending to the comment
+  unless editing really makes a lot more sense.
+- Use `unknown` instead of `any`  wherever appropriate.
 
 ## Documentation
 
-- Always read through [`docs/monorepo-setup.md`](../docs/monorepo-setup.md) to understand the architecture of the monorepo.
+- Always read through [`docs/monorepo-setup.md`](../docs/monorepo-setup.md) to understand the architecture of the
+  monorepo.
 - Check the top-level [`makefile`](../makefile) and makefiles in every package
   (e.g. [`pkgs/utils/makefile`](../pkgs/utils/makefile)) to understand available commands.
 - **Never run lifecycle/build/package-management commands that are not in the makefile.**
@@ -45,8 +50,8 @@
 ## Further Directives
 
 - You run in an environment where `ast-grep` is available; whenever a search requires syntax-aware or structural
-  matching, default to `ast-grep --lang typescript -p '<pattern>'` (or set `--lang` appropriately) and avoid falling back
-  to text-only tools like `grep` unless I explicitly request a plain-text search.
+  matching, default to `ast-grep --lang typescript -p '<pattern>'` (or set `--lang` appropriately) and avoid falling
+  back to text-only tools like `grep` unless I explicitly request a plain-text search.
 - You can use the Chrome Claude extension to preview apps that you are working on (if not, request for me to enable it).
   Please use this affordance whenever you work on visual layout to make sure it is in line with our goals.
 
