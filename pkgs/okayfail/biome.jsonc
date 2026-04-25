@@ -1,0 +1,11 @@
+{
+    "$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+    "extends": ["../../shared/biome.base.jsonc"],
+    "linter": {
+        "rules": {
+            "suspicious": {
+                "noConfusingVoidType": "off" // withValue etc return types need this
+            }
+        }
+    }
+}

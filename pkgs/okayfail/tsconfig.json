@@ -1,0 +1,10 @@
+{
+    "extends": ["../../shared/tsconfig.base.json"],
+    "include": ["src", "./package.json", "*.ts"],
+    "references": [{ "path": "../utils" }],
+    "compilerOptions": {
+        "paths": {
+            "#src/*": ["./src/*"]
+        }
+    }
+}

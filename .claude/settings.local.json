@@ -1,33 +1,41 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(make:*)",
-      "Bash(touch:*)",
-      "Bash(cat:*)",
-      "Bash(bun install:*)",
-      "Bash(bun pm ls:*)",
-      "Bash(bunx npm view:*)",
-      "Bash(bunx panda codegen:*)",
-      "WebSearch",
-      "Bash(bun add:*)",
-      "Bash(bun remove:*)",
-      "Bash(grep:*)",
-      "Bash(bun --version:*)",
-      "Bash(bun --hot index.html)",
-      "Bash(find:*)",
-      "Bash(bunx --version:*)",
-      "Bash(bunx @park-ui/cli:*)",
-      "WebFetch(domain:*)",
-      "WebFetch(domain:park-ui.com)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:panda-css.com)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "Skill(*)"
-    ],
-    "deny": []
-  },
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
-  }
+    "permissions": {
+        "allow": [
+            "Bash(make:*)",
+            "Bash(touch:*)",
+            "Bash(cat:*)",
+            "Bash(bun install:*)",
+            "Bash(bun pm ls:*)",
+            "Bash(bunx npm view:*)",
+            "Bash(bunx panda codegen:*)",
+            "WebSearch",
+            "Bash(bun add:*)",
+            "Bash(bun remove:*)",
+            "Bash(grep:*)",
+            "Bash(tail:*)",
+            "Bash(head:*)",
+            "Bash(wc:*)",
+            "Bash(awk:*)",
+            "Bash(sed:*)",
+            "Bash(sort:*)",
+            "Bash(uniq:*)",
+            "Bash(bun --version:*)",
+            "Bash(bun --hot index.html)",
+            "Bash(find:*)",
+            "Bash(bunx --version:*)",
+            "Bash(bunx @park-ui/cli:*)",
+            "WebFetch(domain:*)",
+            "WebFetch(domain:park-ui.com)",
+            "WebFetch(domain:github.com)",
+            "WebFetch(domain:panda-css.com)",
+            "WebFetch(domain:raw.githubusercontent.com)",
+            "Read(/tmp/claude/*)",
+            "Skill(*)"
+        ],
+        "deny": []
+    },
+    "sandbox": {
+        "enabled": true,
+        "autoAllowBashIfSandboxed": true
+    }
 }

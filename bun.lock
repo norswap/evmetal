@@ -29,6 +29,15 @@
         "typescript": "catalog:",
       },
     },
+    "pkgs/okayfail": {
+      "name": "@norswap/okayfail",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "pkgs/utils": {
       "name": "@norswap/utils",
       "version": "0.0.0",
@@ -42,12 +51,12 @@
       "name": "@evmetal/wallet-core",
       "version": "0.0.0",
       "dependencies": {
-        "@bunup/dts": "catalog:",
         "@norswap/utils": "workspace:",
-        "@types/bun": "catalog:",
         "viem": "^2.47.6",
       },
       "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
@@ -163,6 +172,8 @@
     "@noble/curves": ["@noble/curves@1.9.1", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA=="],
 
     "@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
+
+    "@norswap/okayfail": ["@norswap/okayfail@workspace:pkgs/okayfail"],
 
     "@norswap/utils": ["@norswap/utils@workspace:pkgs/utils"],
 

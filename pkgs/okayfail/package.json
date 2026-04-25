@@ -1,0 +1,43 @@
+{
+    "name": "@norswap/okayfail",
+    "version": "1.0.0",
+    "type": "module",
+    "imports": {
+        "#src/*": "./src/*"
+    },
+    "exports": {
+        ".": {
+            "bun": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            },
+            "development": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            },
+            "default": {
+                "types": "./dist/src/index.d.ts",
+                "default": "./dist/src/index.js"
+            }
+        }
+    },
+    "files": [
+        "src",
+        "dist",
+        "package.json",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "make setup && bun build.ts all",
+        "lint": "bunx biome check",
+        "lintfix": "bunx sort-package-json && bunx biome check --fix --unsafe",
+        "make": "make",
+        "test": "bun test --reporter=dots",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:"
+    }
+}
