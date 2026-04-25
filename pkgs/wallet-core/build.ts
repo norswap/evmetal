@@ -5,7 +5,7 @@ const target = Bun.argv.length < 3 ? "all" : Bun.argv[2]
 if (target === "all" || target === "js") {
     const result = await Bun.build({
         entrypoints: ["./src/index.ts"],
-        outdir: "./dist",
+        outdir: "./dist/src",
         target: "browser",
         sourcemap: "inline",
     })
@@ -22,7 +22,7 @@ if (target === "all" || target === "types") {
     } else {
         await Promise.all(
             result.files.map(async file => {
-                await Bun.write(`dist/${file.outputPath}`, file.dts)
+                await Bun.write(`dist/src/${file.outputPath}`, file.dts)
             }),
         )
     }
