@@ -19,8 +19,8 @@
         }
     },
     "scripts": {
-        "lint": "biome check",
-        "lintfix": "bunx sort-package-json && biome check --fix",
+        "lint": "bunx biome check",
+        "lintfix": "bunx sort-package-json && bunx biome check --fix --unsafe",
         "setup:bun": "bun install --frozen-lockfile"
     },
     "devDependencies": {
