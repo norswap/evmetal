@@ -18,7 +18,7 @@
     },
     "dependencies": {
         "@norswap/utils": "workspace:",
-        "viem": "^2.47.6"
+        "viem": "^2.51.2"
     },
     "devDependencies": {
         "@bunup/dts": "catalog:",

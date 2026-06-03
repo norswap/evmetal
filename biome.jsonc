@@ -4,6 +4,7 @@
     "files": {
         "includes": [
             "!pkgs", // packages will manage their own configs
+            "!vendor",
             "!docs",
             "!.claude",
             "!.turbo",

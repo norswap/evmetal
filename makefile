@@ -1,3 +1,6 @@
+# We can manage updates ourselves, and sometimes we're blocked by min-release-age.
+export TURBO_NO_UPDATE_NOTIFIER := 1
+
 ########################################################################################################################
 # UTILS (INTERNAL)
 
