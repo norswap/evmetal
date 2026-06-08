@@ -21,3 +21,7 @@ nuke:: clean ## Clean + removes all derived files
 	rm -rf .turbo
 	rm -rf node_modules
 .PHONY: nuke
+
+test:
+	bunx turbo test --filter=${pkg}
+.PHONY: test

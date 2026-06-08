@@ -23,7 +23,7 @@
             "dependsOn": ["^make"]
         },
         "typecheck": {
-            "dependsOn": ["^transit", "^build"]
+            "dependsOn": ["^build"]
         },
         "lint": {
             "dependsOn": ["^transit"],
@@ -32,6 +32,9 @@
         "lintfix": {
             "dependsOn": ["^transit"],
             "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/shared/biome.jsonc"]
+        },
+        "test": {
+            "dependsOn": ["^transit"]
         }
     }
 }

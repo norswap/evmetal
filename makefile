@@ -23,9 +23,13 @@ build: ## Builds TypeScript outputs, targeting a package if `pkg=<package>` is s
 	$(call with_pkg_or , make build , bunx turbo build)
 .PHONY: build
 
-typecheck: ## Runs TypeScript typecheck, targetin a package if `pkg=<package>` is specified.
+typecheck: ## Runs TypeScript typecheck, targeting a package if `pkg=<package>` is specified.
 	$(call with_pkg_or , make typecheck , bunx turbo typecheck)
 .PHONY: typecheck
+
+test: ## Runs all tests, targeting a package if `pkg=<package>` is specified.
+	$(call with_pkg_or , make test , bunx turbo test)
+.PHONY: test
 
 clean: ## Remove TypeScript outputs, targeting a package if `pkg=<package>` is specified
 	$(call with_pkg_or , make clean , bunx turbo make --cache=local: -- clean)
