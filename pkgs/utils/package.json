@@ -28,7 +28,7 @@
         "package.json"
     ],
     "scripts": {
-        "build": "make setup && bun build.ts all",
+        "build": "make clean && bun build.ts all",
         "lint": "bunx biome check",
         "lintfix": "bunx sort-package-json && bunx biome check --fix --unsafe",
         "make": "make",

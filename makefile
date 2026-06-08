@@ -9,6 +9,12 @@ define with_pkg_or
 endef
 
 ########################################################################################################################
+# DEFAULT
+
+all: setup typecheck test lintfix build ## Runs all tests, checks & builds.
+.PHONY: all
+
+########################################################################################################################
 # UTILS (PUBLIC)
 
 run: ## Runs a command in package, e.g. `make run pkg=utils cmd=typecheck` runs `cd packages/utils && make typecheck`
