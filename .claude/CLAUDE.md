@@ -44,8 +44,13 @@
 - Check the top-level [`makefile`](../makefile) and makefiles in every package
   (e.g. [`pkgs/utils/makefile`](../pkgs/utils/makefile)) to understand available commands.
 - **Never run lifecycle/build/package-management commands that are not in the makefile.**
-  For instance, never run `bun` directly. If you feel something is missing in makefiles, **stop and ask**.
-  Exceptions: `bun install/update/remove <dependency>` is allowed.
+    - This includes `bun`, `bunx tsc`, `bunx biome`, `tsc`, `turbo`, and any underlying command a makefile target
+      wraps — even if you can see the exact command inside `package.json` scripts or a makefile, **invoke it via
+      `make`** (e.g. `make typecheck`, `make build`, `make test`, `make lint`, `make lintfix`).
+    - To target a single package, use `make <target> pkg=<package>` from the repository root. Do **not** `cd` into
+      the package directory first to shorten the command.
+    - If you feel something is missing in the makefiles, **stop and ask**.
+    - Exceptions: `bun install/update/remove <dependency>` is allowed.
 
 ## Further Directives
 
