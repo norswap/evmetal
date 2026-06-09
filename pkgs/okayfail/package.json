@@ -1,5 +1,5 @@
 {
-    "name": "@norswap/okayfail",
+    "name": "okayfail",
     "version": "1.0.0",
     "type": "module",
     "imports": {
