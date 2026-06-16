@@ -101,18 +101,18 @@ an `async function*`) to either unwrap the value or immediately return the faile
 exceptions but encoding the error type in the result.
 
  ```typescript
- declare const numberResult: Result<number, Error>
- declare function fNumberResult(): Result<number, string>
- declare const shouldSum: boolean
+declare const numberResult: Result<number, Error>
+declare function fNumberResult(): Result<number, string>
+declare const shouldSum: boolean
 
- const foo: () => Result<number, Error | string> = fresult(function *() {
-     const v1 = yield* numberResult
-     // v1 is type `number` — if the result fails, foo returns it immediately
-     const v2 = yield* fNumberResult()
-     // same            
-     return shouldSum ? v1 + v2 : okay(v1 - v2)
-     // can return either values or results, or a mix (the value types must match!)
- })
+const foo: () => Result<number, Error | string> = fresult(function *() {
+    const v1 = yield* numberResult
+    // v1 is type `number` — if the result fails, foo returns it immediately
+    const v2 = yield* fNumberResult()
+    // same            
+    return shouldSum ? v1 + v2 : okay(v1 - v2)
+    // can return either values or results, or a mix (the value types must match!)
+})
  ```
 
 Note that the type annotation on `foo` is fully optional, but provides clarity & demonstrates how this works.
