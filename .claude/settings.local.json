@@ -1,8 +1,12 @@
 {
+    "env": {
+        "CX_CACHE_DIR": ".cx-cache"
+    },
     "permissions": {
         "allow": [
             "Bash(awk:*)",
             "Bash(cat:*)",
+            "Bash(cx:*)",
             "Bash(find:*)",
             "Bash(grep:*)",
             "Bash(head:*)",
@@ -20,11 +24,17 @@
             "Bash(bun --version:*)",
             "Bash(bunx --version:*)",
             "Bash(bunx npm view:*)",
+            "Bash(gh repo:*)",
+            "Bash(gh search:*)",
+            "Bash(git ls-remote:*)",
             "Bash(make:*)",
             "Read(/tmp/claude/*)",
             "Skill(*)",
-            "WebFetch(domain:*)",
-            "WebSearch"
+            "WebSearch",
+            "WebFetch",
+            "WebFetch(domain:github.com)",
+            "WebFetch(domain:api.github.com)",
+            "WebFetch(domain:raw.githubusercontent.com)"
         ],
         "deny": []
     },

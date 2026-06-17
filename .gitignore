@@ -41,6 +41,9 @@ dist
 # Turborepo
 .turbo
 
+# cx semantic code navigation cache (CX_CACHE_DIR)
+.cx-cache
+
 # Hack fixes
  # cf. biome-jetbrains-fix in makefile
 docs/biome.jsonc

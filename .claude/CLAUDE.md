@@ -54,9 +54,14 @@
 
 ## Further Directives
 
-- You run in an environment where `ast-grep` is available; whenever a search requires syntax-aware or structural
-  matching, default to `ast-grep --lang typescript -p '<pattern>'` (or set `--lang` appropriately) and avoid falling
-  back to text-only tools like `grep` unless I explicitly request a plain-text search.
+- For semantic code navigation — looking up a symbol, reading its definition, finding its callers, or getting a
+  table of contents for a file or directory — prefer the `cx` tool (see the `cx` skill). It understands symbols and
+  kinds, so it's the right starting point when you have a name or want to orient yourself in a directory.
+- For *structural pattern matching* (e.g. "find all `await foo(...)` calls", "find every `if (x === null)` branch"),
+  use `ast-grep` — default to `ast-grep --lang typescript -p '<pattern>'` (or set `--lang` appropriately). Avoid
+  falling back to text-only tools like `grep` unless I explicitly request a plain-text search.
+- Rule of thumb: cx for "where does this symbol live / what does it do / who uses it"; ast-grep for "find every place
+  that looks like this code shape".
 - You can use the Chrome Claude extension to preview apps that you are working on (if not, request for me to enable it).
   Please use this affordance whenever you work on visual layout to make sure it is in line with our goals.
 
