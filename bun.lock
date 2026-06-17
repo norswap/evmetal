@@ -6,6 +6,7 @@
       "name": "monorepo",
       "devDependencies": {
         "@biomejs/biome": "^2.4.15",
+        "@devcontainers/cli": "^0.87.0",
         "concurrently": "^9.2.1",
         "sort-package-json": "^3.6.1",
         "turbo": "^2.9.15",
@@ -146,6 +147,8 @@
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.15", "", { "os": "win32", "cpu": "x64" }, "sha512-zBrGq5mx5wwpnow4+2BxUvleDM+GNd4sLbPaMapsSLQLD0NGRCquqPBTgN+7XkUteHvj7M+BstuI8tmnV7+HgQ=="],
 
     "@bunup/dts": ["@bunup/dts@0.14.53", "", { "dependencies": { "@babel/parser": "^7.28.6", "coffi": "^0.1.37", "oxc-minify": "^0.93.0", "oxc-resolver": "^11.16.2", "oxc-transform": "^0.93.0", "picocolors": "^1.1.1", "std-env": "^3.10.0", "ts-import-resolver": "^0.1.23" }, "peerDependencies": { "typescript": ">=4.5.0" }, "optionalPeers": ["typescript"] }, "sha512-qyHgYEYxcghoChICEhuFKfA/EqqRA9WHOHLXcIkR9c70DgLAEXcOlkYhfBPmGxfMKJYL0X4VtQwst0/AMk9D3g=="],
+
+    "@devcontainers/cli": ["@devcontainers/cli@0.87.0", "", { "bin": { "devcontainer": "devcontainer.js" } }, "sha512-OVwjI0LH6cYilo2MXrnqYALtCwKM0dsdphNsIguw0ESRBG8s1wPIjDbPiDO5taxPTe3cLshsQYVZY1UpKtFaJA=="],
 
     "@emnapi/core": ["@emnapi/core@1.8.0", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-ryJnSmj4UhrGLZZPJ6PKVb4wNPAIkW6iyLy+0TRwazd3L1u0wzMe8RfqevAh2HbcSkoeLiSYnOVDOys4JSGYyg=="],
 

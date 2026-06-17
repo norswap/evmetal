@@ -1,7 +1,7 @@
 # Own files
 *.local.*
 !/.claude/settings.local.json
-/.claude/worktrees
+/.worktrees
 
 # Environment variables
 *.env*

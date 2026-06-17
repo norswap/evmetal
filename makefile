@@ -87,6 +87,59 @@ refresh-deps: ## Update dependencies for manually edited package.json files, war
 # This will also update all dependencies that have updates compatible with their bounds, overwrite the lockfile version.
 
 ########################################################################################################################
+# WORKTREES
+
+tree: ## Create a new worktree at .worktrees/$(name) on branch wt/$(name). Requires name=<name>.
+	@if [ -z "$(name)" ]; then echo "Usage: make tree name=<name>"; exit 1; fi
+	git worktree add --relative-paths -b wt/$(name) .worktrees/$(name)
+.PHONY: tree
+
+rmtree: ## Remove the worktree at .worktrees/$(name). Branch wt/$(name) is preserved. Requires name=<name>.
+	@if [ -z "$(name)" ]; then echo "Usage: make rmtree name=<name>"; exit 1; fi
+	git worktree remove .worktrees/$(name)
+.PHONY: rmtree
+
+trees: ## List all worktrees.
+	git worktree list
+.PHONY: trees
+
+########################################################################################################################
+# DEVCONTAINER
+
+# The main repo's checkout root — resolved from git's common .git dir, which is shared across worktrees. Invoking `make
+# dev.*` from a worktree therefore still targets the main repo's container instead of spawning a fresh one keyed to the
+# worktree path.
+REPO := $(shell git rev-parse --path-format=absolute --git-common-dir | xargs dirname)
+
+define devcontainer
+	bunx devcontainer $(strip $(1)) --workspace-folder $(REPO) $(strip $(2))
+endef
+
+dev.up: ## Build (if needed) and start the devcontainer for the main repo (works from any worktree).
+	$(call devcontainer , up)
+.PHONY: dev.up
+
+dev.down: ## Stop the devcontainer without removing it (resume with `make dev.up`).
+	docker ps -q --filter "label=devcontainer.local_folder=$(REPO)" | xargs -r docker stop
+.PHONY: dev.down
+
+dev.tear: ## Stop and remove the devcontainer (named volumes persist).
+	docker ps -aq --filter "label=devcontainer.local_folder=$(REPO)" | xargs -r docker rm -f
+.PHONY: dev.tear
+
+dev.rebuild: ## Rebuild the devcontainer from scratch and start it (drops the container, keeps volumes).
+	$(call devcontainer , up , --remove-existing-container)
+.PHONY: dev.rebuild
+
+dev.shell: dev.up ## Open a bash shell inside the devcontainer, anchored at the calling worktree.
+	$(call devcontainer , exec , .devcontainer/run.sh "$$(pwd)" "$(REPO)" bash)
+.PHONY: dev.shell
+
+dev.claude: dev.up ## Run Claude Code (skipping permissions) inside the devcontainer, anchored at the calling worktree.
+	$(call devcontainer , exec , .devcontainer/run.sh "$$(pwd)" "$(REPO)" claude --dangerously-skip-permissions)
+.PHONY: dev.claude
+
+########################################################################################################################
 # MISC / QUALITY OF LIFE
 
 ccusage: ## Check Claude Code usage

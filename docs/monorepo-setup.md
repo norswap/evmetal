@@ -3,7 +3,7 @@
 ## Build System
 
 - We use Bun as package manager and JS runtime.
- 
+
 - Relevant commands are listed in makefiles, at the top-level and in every package.
     - Every command comes with a short docstring.
     - Shared commands are in `shared/*.mk`
@@ -13,10 +13,10 @@
 
 - We use Turborepo to handle tasks that are reliant on inter-package dependency ordering.
     - Tasks are configured in `/turbo.json` and in individual `package.json`'s `"scripts"` section.
-       - The script implements the local (per-package) task, the Turbo tasks sets up the dependency graph.
-       - The make rules call Turbo to make sure everything is done following the dependency graph.
+        - The script implements the local (per-package) task, the Turbo tasks sets up the dependency graph.
+        - The make rules call Turbo to make sure everything is done following the dependency graph.
     - **Tuborepo should NEVER EVER be invoked directly, neither should the scripts (see below).**
-        - If you cannot figure out how to do your work without this, stop and ask. 
+        - If you cannot figure out how to do your work without this, stop and ask.
     - If dependencies are not involved, no `package.json` script or Turbo task should be added.
     - To run a makefile command in every package, you can run `turbo make -- <command>`, or
       `turbo make --cache=local: -- <command>` if the results shouldn't be cached.
@@ -40,3 +40,44 @@ Enables using Bun along with Solid.js.
 Shared utility functions that can be used from other packages.
 At the moment, these are type-level transformation utilities and array utilities.
 The `pkgs/utils/src/index.ts` can be consulted for an overview of available exports.
+
+## Worktrees
+
+For multiplexed agent work, the makefile exposes a small worktree surface:
+
+- `make tree name=foo` — creates `.worktrees/foo/` on branch `wt/foo` and prints the SSH connection parameters.
+- `make rmtree name=foo` — removes the worktree directory. The branch is preserved, delete manually.
+- `make trees` — lists all active worktrees.
+
+Each worktree has its own `node_modules` and `.turbo` cache.
+
+To be compatible with devcontainers (see below) worktrees need to use relative paths. `make tree` does this for you. You
+can also run `git config worktree.useRelativePaths` so that your worktree commands will create worktrees with relative
+paths by default.
+
+## Devcontainer (for agent isolation)
+
+The repo ships a devcontainer (`.devcontainer/`) that IDEs like VS Code and WebStorm can open directly. The container
+also runs `sshd` on host port `2222`, allowing SSH connections (`vscode@localhost:2222`) using the host's
+`~/.ssh/id_rsa` key.
+
+Worktrees can be accessed via the devcontainer!
+
+Lifecycle commands:
+
+- `make dev.up` — build (if needed) and start the devcontainer; also resumes an existing stopped container.
+- `make dev.down` — stop the container without removing it (state in the writable layer is preserved).
+- `make dev.tear` — stop and remove the container; named volumes (e.g. the JetBrains backend cache) persist.
+- `make dev.rebuild` — rebuild the image from scratch and start; volumes persist.
+- `make dev.shell` — open a bash session inside the container (start it if needed).
+- `make dev.claude` — open a claude (permission skipping) session inside the container (start it if needed).
+
+`dev.shell` and `dev.claude` are worktree aware on the host and will put you on the right worktree in the container.
+
+### Authenticating Claude Code inside the container
+
+The container's Claude Code is a separate install from the host's, so it needs its own login. On first run
+(`make dev.claude`), it will prompt for OAuth — complete the flow in your browser and the credentials are saved into
+the `evmetal-claude-config` named volume (`/home/vscode/.claude` inside the container). The volume persists across
+`dev.tear` and `dev.rebuild`, so you only authenticate once. Host claude config (skills, memory, etc.) is **not**
+shared — copy in manually if you want it.

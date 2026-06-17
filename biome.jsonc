@@ -3,11 +3,13 @@
     "extends": ["./shared/biome.base.jsonc"],
     "files": {
         "includes": [
-            "!pkgs", // packages will manage their own configs
+            "!pkgs",
+            // packages will manage their own configs
             "!vendor",
             "!docs",
             "!.turbo",
-            "!.vscode"
+            "!.vscode",
+            "!.worktrees"
         ]
     }
 }

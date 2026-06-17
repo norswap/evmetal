@@ -1,0 +1,27 @@
+{
+    "name": "evmetal",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "runArgs": ["--cpus=6", "--memory=16g", "--hostname=evmetal-dev", "--name=evmetal-dev"],
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts"
+        },
+        "ghcr.io/devcontainers/features/sshd:1": {}
+    },
+    "remoteUser": "vscode",
+    "appPort": ["2222:2222"],
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh/id_rsa.pub,target=/tmp/host_pubkey,type=bind,readonly",
+        "source=evmetal-jetbrains-cache,target=/home/vscode/.cache/JetBrains,type=volume",
+        "source=evmetal-claude-config,target=/home/vscode/.claude,type=volume"
+    ],
+    "initializeCommand": [".devcontainer/initialize.sh", "${localWorkspaceFolder}"],
+    "postCreateCommand": ".devcontainer/post-create.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": ["biomejs.biome", "oven.bun-vscode"]
+        }
+    }
+}
