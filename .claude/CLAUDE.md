@@ -8,8 +8,14 @@
       use a subshell with parentheses, e.g. `(cd pkgs/utils && bun install solid-js)`.
 - **NEVER swallow errors! Every error must be explicitly handled or propagated.**
 - **NEVER, EVER switch branches, stage files, commit, push or pull.**
+- **On startup, if you're not in bypass permission mode (`--dangerously-skip-permissions`), flag this and ask me if I
+  want to restart you.**
 - **We use Bun for everything, NEVER use npm/yarn/pnpm command, always use the Bun equivalent (e.g. `bunx` for `npx`).**
     - **Caveat: Remember to use makefile commands instead of Bun directly when applicable!**
+- **Only ever rewrite comments when they are no longer accurate or missing VERY IMPORTANT details.**
+- **Resist adding comments explaining something you just did.**
+    - Only add comments if readers would be flabbergasted, and couldn't figure it out by thinking for a bit.
+- **Whenever you reach for `grep`, consider using `cx` or `ast-grep` instead (see below).**
 
 ### Code Style
 
