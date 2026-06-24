@@ -140,8 +140,5 @@ while okayfail can have error-specific handlers.
 
 Otherwise, it's just a different flavoring, I tried to make the library easily digestible and pretty 🌸✨
 
-I got sucked into the rabbithole of building this, thinking it would only take a couple hours (it didn't — see [the
-implementation notes][notes]). That being said, I'm quite happy for the result and intend to use it extensively for my
-own projects.
-
-[notes]: ramblings/design.md
+I got sucked into the rabbithole of building this, thinking it would only take a couple hours (it didn't). That being
+said, I'm quite happy for the result and intend to use it extensively for my own projects.
