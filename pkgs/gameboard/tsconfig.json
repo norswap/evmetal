@@ -1,0 +1,11 @@
+{
+    "extends": ["../../shared/tsconfig.base.json"],
+    "include": ["src", "./package.json", "*.ts"],
+    "compilerOptions": {
+        // required to typecheck `bun-solid-plugin` import in `build.ts`
+        "customConditions": ["bun"],
+        "paths": {
+            "#src/*": ["./src/*"]
+        }
+    }
+}

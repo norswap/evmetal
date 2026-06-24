@@ -1,0 +1,27 @@
+{
+    "name": "@norswap/gameboard",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "imports": {
+        "#src/*": "./src/*"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "make clean && bun build.ts",
+        "lint": "bunx biome check",
+        "lintfix": "bunx sort-package-json && bunx biome check --fix --unsafe",
+        "make": "make",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "solid-js": "catalog:"
+    },
+    "devDependencies": {
+        "@types/bun": "catalog:",
+        "bun-plugin-solid": "workspace:",
+        "typescript": "catalog:"
+    }
+}

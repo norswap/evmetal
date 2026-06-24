@@ -1,0 +1,7 @@
+# Configure JSX for Solid JS
+jsx = "solid"
+jsxFactory = "solid-js"
+
+[serve.static]
+# We need to tell the Bun server to use the plugin like this.
+plugins = ["bun-plugin-solid"]
