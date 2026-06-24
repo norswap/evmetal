@@ -17,7 +17,9 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "solid-js": "catalog:"
+        "@dnd-kit/solid": "^0.5.0",
+        "solid-js": "catalog:",
+        "unique-names-generator": "^4.7.1"
     },
     "devDependencies": {
         "@types/bun": "catalog:",
