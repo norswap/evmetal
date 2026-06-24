@@ -15,7 +15,8 @@
     "mounts": [
         "source=${localEnv:HOME}/.ssh/id_rsa.pub,target=/tmp/host_pubkey,type=bind,readonly",
         "source=evmetal-jetbrains-cache,target=/home/vscode/.cache/JetBrains,type=volume",
-        "source=evmetal-claude-config,target=/home/vscode/.claude,type=volume"
+        "source=evmetal-claude-config,target=/home/vscode/.claude,type=volume",
+        "source=evmetal-node-modules,target=${containerWorkspaceFolder}/node_modules_volume,type=volume"
     ],
     "initializeCommand": [".devcontainer/initialize.sh", "${localWorkspaceFolder}"],
     "postCreateCommand": ".devcontainer/post-create.sh",

@@ -17,6 +17,7 @@ logs
 
 # Node
 node_modules
+/node_modules_volume
 *.local
 
 # Build outputs

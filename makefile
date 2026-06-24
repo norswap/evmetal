@@ -2,11 +2,27 @@
 export TURBO_NO_UPDATE_NOTIFIER := 1
 
 ########################################################################################################################
-# UTILS (INTERNAL)
+# UTILS & VARS (INTERNAL)
 
 define with_pkg_or
 	$(if $(pkg) , cd pkgs/$(pkg) && $(1) , $(2))
 endef
+
+# The main repo's checkout root — resolved from git's common .git dir, which is shared across worktrees.
+REPO := $(shell git rev-parse --path-format=absolute --git-common-dir | xargs dirname)
+
+# "root" or the current worktree name
+WORKTREE = $(shell tree="$$(git rev-parse --show-toplevel)"; [ "$$tree" = "$(REPO)" ] && echo root || echo "$$(basename "$$tree")")
+IS_ROOT = $(filter root,$(WORKTREE))
+
+# This worktree's node_modules storage dir name under node_modules_volume.
+WORKTREE_NM_NAME = $(if $(IS_ROOT),root,wt-$(WORKTREE))
+
+# The node_modules target for this worktree ($ROOT/node_modules_volume/$WORKTREE_NM_NAME).
+WORKTREE_NM_TARGET  = $(if $(IS_ROOT),,../../)node_modules_volume/$(WORKTREE_NM_NAME)
+
+# The actual node_modules dir for this worktree (a symlink to WORKTREE_NM_TARGET).
+WORKTREE_NM_LINK = $(if $(IS_ROOT),$(REPO)/node_modules,$(REPO)/.worktrees/$(WORKTREE)/node_modules)
 
 ########################################################################################################################
 # DEFAULT
@@ -24,7 +40,7 @@ run: ## Runs a command in package, e.g. `make run pkg=utils cmd=typecheck` runs 
 ########################################################################################################################
 # LIFECYCLE
 
-setup: ## Installs from lockfile
+setup: link-node-modules ## Installs from lockfile
 	bunx turbo setup
 .PHONY: setup
 
@@ -46,12 +62,20 @@ clean: ## Remove TypeScript outputs, targeting a package if `pkg=<package>` is s
 
 nuke: ## clean + removes all derived files (e.g. node_modules, Turborepo caches)
 	bunx turbo make --cache=local: -- nuke
-	rm -rf node_modules
-	rm -rf .turbo
+	rm -rf node_modules .turbo
+	rm -rf "$(REPO)/node_modules_volume/$(WORKTREE_NM_NAME)"
+	@make link-node-modules
 .PHONY: nuke
 
 reset: nuke setup ## nuke + setup
 .PHONY: reset
+
+link-node-modules: ## (Re)create this tree's node_modules -> node_modules_volume slot symlink.
+	mkdir -p "$(REPO)/node_modules_volume/$(WORKTREE_NM_NAME)/.bun"
+	rm -rf "$(WORKTREE_NM_LINK)"
+	ln -sfn "$(WORKTREE_NM_TARGET)" "$(WORKTREE_NM_LINK)"
+.PHONY: link-node-modules
+# cf. docs/monorepo-setup.md (section on devcontainer)
 
 lint: ## Runs linting & format checks but does not make any changes, across the workspace.
 	bunx turbo lint --log-order=grouped
@@ -91,12 +115,13 @@ refresh-deps: ## Update dependencies for manually edited package.json files, war
 
 tree: ## Create a new worktree at .worktrees/$(name) on branch wt/$(name). Requires name=<name>.
 	@if [ -z "$(name)" ]; then echo "Usage: make tree name=<name>"; exit 1; fi
-	git worktree add --relative-paths -b wt/$(name) .worktrees/$(name)
+	git worktree add --relative-paths -b wt/$(name) $(REPO)/.worktrees/$(name)
 .PHONY: tree
 
 rmtree: ## Remove the worktree at .worktrees/$(name). Branch wt/$(name) is preserved. Requires name=<name>.
 	@if [ -z "$(name)" ]; then echo "Usage: make rmtree name=<name>"; exit 1; fi
-	git worktree remove .worktrees/$(name)
+	git worktree remove $(REPO)/.worktrees/$(name)
+	rm -rf $(REPO)/node_modules_volume/wt-$(name)
 .PHONY: rmtree
 
 trees: ## List all worktrees.
@@ -105,11 +130,6 @@ trees: ## List all worktrees.
 
 ########################################################################################################################
 # DEVCONTAINER
-
-# The main repo's checkout root — resolved from git's common .git dir, which is shared across worktrees. Invoking `make
-# dev.*` from a worktree therefore still targets the main repo's container instead of spawning a fresh one keyed to the
-# worktree path.
-REPO := $(shell git rev-parse --path-format=absolute --git-common-dir | xargs dirname)
 
 define devcontainer
 	bunx devcontainer $(strip $(1)) --workspace-folder $(REPO) $(strip $(2))

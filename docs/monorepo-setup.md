@@ -81,3 +81,15 @@ The container's Claude Code is a separate install from the host's, so it needs i
 the `evmetal-claude-config` named volume (`/home/vscode/.claude` inside the container). The volume persists across
 `dev.tear` and `dev.rebuild`, so you only authenticate once. Host claude config (skills, memory, etc.) is **not**
 shared — copy in manually if you want it.
+
+### Building & running on both container and host
+
+When container and host are not running the same OS (which is the case with a macOS host, the devcontainer VM will be
+Linux), there can be conflicts when some dependencies are OS-specific.
+
+To solve this issue, we setup the top-level `node_modules` to be a symlink to a directory under `node_modules_volume`.
+On the host this will simply receive the regular `node_modules` depdendencies. On the container, we mount a volume
+there,
+therefore isolating host and guest.
+
+The `make setup` and `make nuke` rules are aware of and preserve this setup.

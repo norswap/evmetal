@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# See docs/monorepo-setup.md (section on devcontainer) for some details / rationale about what is done here.
+
 # Install the host's public key as an authorized key for sshd.
 # The host key is bind-mounted into the container at /tmp/host_pubkey (see devcontainer.json).
 mkdir -p ~/.ssh
@@ -11,16 +13,19 @@ chmod 600 ~/.ssh/authorized_keys
 # Fresh docker volumes are root-owned; chown so JetBrains Gateway can write its
 # backend dist + caches here, surviving container rebuilds.
 sudo mkdir -p /home/vscode/.cache/JetBrains
-sudo chown -R vscode:vscode /home/vscode/.cache/JetBrains
+sudo chown vscode:vscode /home/vscode/.cache/JetBrains
 
 # Same for the Claude Code config/credentials volume — keeps the in-container
 # login persistent across container rebuilds.
 sudo mkdir -p /home/vscode/.claude
-sudo chown -R vscode:vscode /home/vscode/.claude
+sudo chown vscode:vscode /home/vscode/.claude
 
 # ~/.claude.json must also be persisted.
 # This is okay whether ~/.claude/.claude.json exists or not.
 ln -sf "$HOME/.claude/.claude.json" "$HOME/.claude.json"
 
-# Install project dependencies.
+# The node_modules volume is shared across worktrees and holds each tree's platform-specific deps.
+sudo chown vscode:vscode "$(pwd)/node_modules_volume"
+
+# Install project dependencies (also creates this tree's node_modules symlink into the volume).
 make setup
