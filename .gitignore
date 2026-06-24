@@ -47,3 +47,6 @@ dist
 # Hack fixes
  # cf. biome-jetbrains-fix in makefile
 docs/biome.jsonc
+
+# AI / MCP / ...
+.playwright-mcp
