@@ -6,11 +6,14 @@
 
 Forked from https://github.com/dsnchz/bun-plugin-solid
 
-> 🧩 A Bun plugin for transforming SolidJS JSX/TSX files at runtime or build time using Babel. Supports SSR and DOM output.
+> 🧩 A Bun plugin for transforming SolidJS JSX/TSX files at runtime or build time using Babel. Supports SSR and DOM
+> output.
 >
-> 🟢 Works seamlessly with [Bun](https://bun.sh) and [Elysia](https://elysiajs.com) servers for both runtime and build-time JSX/TSX transformation.
+> 🟢 Works seamlessly with [Bun](https://bun.sh) and [Elysia](https://elysiajs.com) servers for both runtime and
+> build-time JSX/TSX transformation.
 
-> ⚠️ **Note**: This plugin is designed specifically for use with the [Bun runtime](https://bun.sh). It will not work in Node.js, Deno, or other JavaScript environments.
+> ⚠️ **Note**: This plugin is designed specifically for use with the [Bun runtime](https://bun.sh). It will not work in
+> Node.js, Deno, or other JavaScript environments.
 
 ## Features
 
@@ -29,7 +32,9 @@ bun add --dev "bun-plugin-solid@workspace:"
 
 ## Plugin Options
 
-> Plugin options `generate` and `hydratable` are directly derived from [`babel-preset-solid`](https://github.com/solidjs/solid/blob/main/packages/babel-preset-solid/src/index.ts#L11-L18) and will be passed to it under the hood.
+> Plugin options `generate` and `hydratable` are directly derived from [
+`babel-preset-solid`](https://github.com/solidjs/solid/blob/main/packages/babel-preset-solid/src/index.ts#L11-L18) and
+> will be passed to it under the hood.
 
 ```ts
 type SolidPluginOptions = {
@@ -125,3 +130,5 @@ await Bun.build({
   ],
 })
 ```
+
+If you want `tsc` to typecheck `build.ts`, add `"customConditions": ["bun"]` under `tsconfig.json/"compilerOptions"`.

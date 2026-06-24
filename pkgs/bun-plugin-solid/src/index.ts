@@ -1,3 +1,5 @@
+/// <reference path="./types/babel-preset-solid.d.ts" />
+/// <reference path="./types/babel-preset-typescript.d.ts" />
 import type { PluginItem, TransformOptions } from "@babel/core"
 import tsPreset from "@babel/preset-typescript"
 import solidPreset, { type BabelPresetSolidOptions } from "babel-preset-solid"
