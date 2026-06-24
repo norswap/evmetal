@@ -8,6 +8,7 @@ if (target === "all" || target === "js") {
         outdir: "./dist/src",
         target: "browser",
         sourcemap: "inline",
+        // inline sourcemaps + no minify — the consumer can handle these concerns
     })
     if (!result.success) {
         console.error("Build failed")
