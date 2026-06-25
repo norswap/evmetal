@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Gameboard</title>
+        <style>
+            body {
+                font-family: system-ui, sans-serif;
+                margin: 2rem;
+            }
+            .demo-board {
+                display: flex;
+                gap: 1.5rem;
+            }
+            .gb-slot {
+                width: 120px;
+                height: 170px;
+                border: 2px dashed #bbb;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .gb-slot.highlight-ok {
+                border-color: #2e7d32;
+                background: #e8f5e9;
+            }
+            .gb-slot-mount {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .gb-card {
+                cursor: grab;
+            }
+            .demo-card {
+                width: 100px;
+                height: 150px;
+                border-radius: 8px;
+                border: 1px solid #999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.6rem;
+                user-select: none;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="./index.tsx"></script>
+    </body>
+</html>
