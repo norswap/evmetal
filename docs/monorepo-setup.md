@@ -55,6 +55,11 @@ To be compatible with devcontainers (see below) worktrees need to use relative p
 can also run `git config worktree.useRelativePaths` so that your worktree commands will create worktrees with relative
 paths by default.
 
+It's recommended to use [git-branchless] to manage worktree branches so that they can be stacked on top of each other
+and easily rebased, even in the presence of history editing.
+
+[git-branchless]: https://github.com/arxanas/git-branchless
+
 ## Devcontainer (for agent isolation)
 
 The repo ships a devcontainer (`.devcontainer/`) that IDEs like VS Code and WebStorm can open directly. The container
