@@ -1,45 +1,44 @@
-import { useDroppable } from "@dnd-kit/solid"
-import { createEffect, type JSX } from "solid-js"
-import { useGameBoard } from "./context"
+import { useDraggable, useDroppable } from "@dnd-kit/solid"
+import { For, type JSX } from "solid-js"
+import { useGameBoard } from "./GameBoardContext"
 
 /** Props for a CardSlot (Step 1 subset). */
 export interface CardSlotProps {
     id?: string
 }
 
-// Makes `mount`'s children exactly `desired`, in order, by *moving* existing nodes rather than recreating them
-// (insertBefore/appendChild relocate an already-attached node). Trailing leftovers are detached; if they belong to
-// another slot, that slot's reconciler re-attaches them.
-function reconcileChildren(mount: HTMLElement, desired: HTMLElement[]): void {
-    desired.forEach((el, index) => {
-        const current = mount.childNodes[index]
-        if (current !== el) mount.insertBefore(el, current ?? null)
-    })
-    while (mount.childNodes.length > desired.length) {
-        mount.removeChild(mount.lastChild as ChildNode)
-    }
-}
-
 /**
- * A named drop region. It holds no cards directly: membership is read from the board's location store, and the
- * cards' elements are reparented into this slot's mount point by the reconciler effect below.
+ * A named drag source & drop target. The card it contains are read from {@link BoardGameController.slotContent}.
  */
 export function CardSlot(props: CardSlotProps): JSX.Element {
     const board = useGameBoard()
     const id = board.registerSlot(props.id)
     const droppable = useDroppable({ id })
-    let mount!: HTMLDivElement
-
-    // Keep the slot's DOM in sync with the cards the location store assigns to it.
-    createEffect(() => {
-        const ids = board.locations[id] ?? []
-        const els = ids.map(cardId => board.cardEl(cardId)).filter((el): el is HTMLElement => el !== undefined)
-        reconcileChildren(mount, els)
-    })
 
     return (
         <div class="gb-slot" classList={{ "highlight-ok": droppable.isDropTarget() }} ref={el => droppable.ref(el)}>
-            <div class="gb-slot-mount" ref={mount} />
+            <div class="gb-slot-mount">
+                <For each={board.slotContent[id]}>
+                    {cardId => <Card cardId={cardId}>{board.renderCard(cardId)}</Card>}
+                </For>
+            </div>
+        </div>
+    )
+}
+
+/**
+ * Wraps a card's component, making it draggable and hiding it while a drag is in flight (a drag overlay shows the
+ * moving render instead).
+ */
+function Card(props: { cardId: string; children?: JSX.Element }): JSX.Element {
+    const draggable = useDraggable({ id: props.cardId })
+    return (
+        <div
+            class="gb-card"
+            style={{ visibility: draggable.isDragging() || draggable.isDropping() ? "hidden" : "visible" }}
+            ref={el => draggable.ref(el)}
+        >
+            {props.children}
         </div>
     )
 }

@@ -1,17 +1,14 @@
 import { type JSX, onMount } from "solid-js"
-import { Card } from "./Card"
 import { CardSlot } from "./CardSlot"
-import { useGameBoard } from "./context"
 import { GameBoard } from "./GameBoard"
+import { useGameBoard } from "./GameBoardContext"
 
-// A tiny demo card visual wrapped in the draggable Card chrome.
+// A tiny demo card visual; the draggable Card chrome is supplied by `board.spawn`.
 function PlayingCard(props: { label: string; color: string }): JSX.Element {
     return (
-        <Card source>
-            <div class="demo-card" style={{ "background-color": props.color }}>
-                {props.label}
-            </div>
-        </Card>
+        <div class="demo-card" style={{ "background-color": props.color }}>
+            {props.label}
+        </div>
     )
 }
 
@@ -19,8 +16,8 @@ function PlayingCard(props: { label: string; color: string }): JSX.Element {
 function Setup(): JSX.Element {
     const board = useGameBoard()
     onMount(() => {
-        board.spawn("hand", PlayingCard, { label: "A♠", color: "#f5f5f5" })
-        board.spawn("discard", PlayingCard, { label: "K♥", color: "#ffe0e0" })
+        board.spawn({ slotId: "hand", component: PlayingCard, props: { label: "A♠", color: "#f5f5f5" } })
+        board.spawn({ slotId: "discard", component: PlayingCard, props: { label: "K♥", color: "#ffe0e0" } })
     })
     return null
 }
