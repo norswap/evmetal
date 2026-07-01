@@ -9,7 +9,8 @@
             "!docs",
             "!.turbo",
             "!.vscode",
-            "!.worktrees"
+            "!.worktrees",
+            "!node_modules_volume"
         ]
     }
 }

@@ -3,9 +3,7 @@
     "env": {
         "CX_CACHE_DIR": ".cx-cache"
     },
-    "enabledMcpjsonServers": [
-        "playwright"
-    ],
+    "enabledMcpjsonServers": ["playwright"],
     "hooks": {
         "PreToolUse": [
             {
