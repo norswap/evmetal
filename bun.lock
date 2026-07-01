@@ -34,14 +34,19 @@
       "name": "@norswap/gameboard",
       "version": "0.0.0",
       "dependencies": {
-        "@dnd-kit/solid": "^0.5.0",
-        "solid-js": "catalog:",
         "unique-names-generator": "^4.7.1",
       },
       "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@dnd-kit/solid": "catalog:",
         "@types/bun": "catalog:",
         "bun-plugin-solid": "workspace:",
+        "solid-js": "catalog:",
         "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "@dnd-kit/solid": "catalog:",
+        "solid-js": "catalog:",
       },
     },
     "pkgs/okayfail": {
@@ -50,6 +55,19 @@
       "devDependencies": {
         "@bunup/dts": "catalog:",
         "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "pkgs/playground": {
+      "name": "@norswap/playground",
+      "version": "0.0.0",
+      "dependencies": {
+        "@norswap/gameboard": "workspace:",
+        "solid-js": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "bun-plugin-solid": "workspace:",
         "typescript": "catalog:",
       },
     },
@@ -78,6 +96,7 @@
   },
   "catalog": {
     "@bunup/dts": "^0.14.53",
+    "@dnd-kit/solid": "^0.5.0",
     "@types/bun": "^1.3.14",
     "idb": "^8.0.3",
     "solid-js": "^1.9.10",
@@ -203,6 +222,8 @@
     "@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
 
     "@norswap/gameboard": ["@norswap/gameboard@workspace:pkgs/gameboard"],
+
+    "@norswap/playground": ["@norswap/playground@workspace:pkgs/playground"],
 
     "@norswap/utils": ["@norswap/utils@workspace:pkgs/utils"],
 

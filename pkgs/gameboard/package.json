@@ -6,24 +6,47 @@
     "imports": {
         "#src/*": "./src/*"
     },
+    "exports": {
+        ".": {
+            "bun": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            },
+            "development": {
+                "types": "./src/index.ts",
+                "default": "./src/index.ts"
+            },
+            "default": {
+                "types": "./dist/src/index.d.ts",
+                "default": "./dist/src/index.js"
+            }
+        }
+    },
     "files": [
-        "dist"
+        "src",
+        "dist",
+        "package.json"
     ],
     "scripts": {
-        "build": "make clean && bun build.ts",
+        "build": "make clean && bun build.ts all",
         "lint": "bunx biome check",
         "lintfix": "bunx sort-package-json && bunx biome check --fix --unsafe",
         "make": "make",
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@dnd-kit/solid": "^0.5.0",
-        "solid-js": "catalog:",
         "unique-names-generator": "^4.7.1"
     },
     "devDependencies": {
+        "@bunup/dts": "catalog:",
+        "@dnd-kit/solid": "catalog:",
         "@types/bun": "catalog:",
         "bun-plugin-solid": "workspace:",
+        "solid-js": "catalog:",
         "typescript": "catalog:"
+    },
+    "peerDependencies": {
+        "@dnd-kit/solid": "catalog:",
+        "solid-js": "catalog:"
     }
 }

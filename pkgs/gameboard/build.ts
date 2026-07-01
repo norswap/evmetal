@@ -1,19 +1,38 @@
+import { generateDts } from "@bunup/dts"
 import { SolidPlugin } from "bun-plugin-solid"
 
-// Bundles the Solid app (HTML entrypoint + TSX) into static assets under `dist/`.
-// The dev server (`make dev`) transforms TSX on the fly via `bunfig.toml`; this is the production build.
-const result = await Bun.build({
-    entrypoints: ["./src/index.html"],
-    outdir: "./dist/src",
-    target: "browser",
-    splitting: true,
-    // sourcemap: "inline", // enable to debug prod builds
-    minify: true,
-    plugins: [SolidPlugin({ hydratable: false /* , sourceMaps: false */ })],
-})
+const target = Bun.argv.length < 3 ? "all" : Bun.argv[2]
 
-if (!result.success) {
-    console.error("Build failed")
-    for (const log of result.logs) console.error(log)
-    process.exit(1)
+if (target === "all" || target === "js") {
+    // Externalize all runtime dependencies, so the consumer can dedupe them.
+    // We can't use `packages: "external"` or `external: ["*"]` because that will kill our `#src/*` subpath imports.
+    const pkg = (await Bun.file("./package.json").json()) as Record<string, Record<string, string>>
+    const deps = { ...pkg.dependencies, ...pkg.peerDependencies, ...pkg.optionalDependencies }
+    const external = Object.keys(deps).flatMap(dep => [dep, `${dep}/*`])
+    const result = await Bun.build({
+        entrypoints: ["./src/index.ts"],
+        outdir: "./dist/src",
+        target: "browser",
+        sourcemap: "inline",
+        external,
+        plugins: [SolidPlugin({ hydratable: false })],
+    })
+    if (!result.success) {
+        console.error("Build failed")
+        for (const log of result.logs) console.error(log)
+        process.exit(1)
+    }
+}
+
+if (target === "all" || target === "types") {
+    const result = await generateDts(["./src/index.ts"])
+    if (result.errors.length > 0) {
+        for (const error of result.errors) console.error(error)
+    } else {
+        await Promise.all(
+            result.files.map(async file => {
+                await Bun.write(`dist/src/${file.outputPath}`, file.dts)
+            }),
+        )
+    }
 }

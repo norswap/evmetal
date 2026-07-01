@@ -1,7 +1,5 @@
+import { CardSlot, GameBoard, useGameBoard } from "@norswap/gameboard"
 import { type JSX, onMount } from "solid-js"
-import { CardSlot } from "./CardSlot"
-import { GameBoard } from "./GameBoard"
-import { useGameBoard } from "./GameBoardContext"
 
 // A tiny demo card visual; the draggable Card chrome is supplied by `board.spawn`.
 function PlayingCard(props: { label: string; color: string }): JSX.Element {
