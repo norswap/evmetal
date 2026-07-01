@@ -19,7 +19,6 @@
 
 ### Code Style
 
-- Descriptive variables (`top`, `value1`, `operand` not `a`, `b`)
 - We use Biome to lint & format code. After you write code, run `make lintfix` to lint & format the code, then run
   `make lint` to check that everything could be fixed automatically. If not, fix it, then run `make lint`
   againt to confirm it worked.
@@ -34,8 +33,7 @@
       return [...new Set(array)]
   }
   ```
-- Comment the implementations whenever the behaviour is not obvious.
-- You may also divide an implementation in sections with a comment describing the purpose of next section.
+
 - Never add "useless comments" in implementations that are a restatement of an obvious line of code.
   Comments are reserved for tricky non-obvious code and explaining the purpose of an entire code section.
 - Do not gratuitously rewrite existing comments or remove existing details from them. Only rewrite when they no longer
@@ -68,8 +66,7 @@
   falling back to text-only tools like `grep` unless I explicitly request a plain-text search.
 - Rule of thumb: cx for "where does this symbol live / what does it do / who uses it"; ast-grep for "find every place
   that looks like this code shape".
-- You can use the Chrome Claude extension to preview apps that you are working on (if not, request for me to enable it).
-  Please use this affordance whenever you work on visual layout to make sure it is in line with our goals.
+- You can use the Playwright MCP to test webapps or perform visual inspection.
 
 ## Workflow
 
