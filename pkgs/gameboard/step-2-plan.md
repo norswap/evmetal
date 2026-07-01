@@ -1,4 +1,4 @@
-# Step 2 Plan — multi-card slots, layouts, source/target rules
+# Step 2 Plan — multi-card slots, layouts, drag/drop rules
 
 This is the implementation plan for Step 2 of the [GameBoard spec](./spec.md). It builds on the **golden state** of
 Step 1 (the repo, *not* `step-1-plan.md`, which described a reparenting model we did not adopt — cards are re-rendered
@@ -9,8 +9,8 @@ from thunks on move, matching the spec's "a move does not preserve internal stat
 **In:**
 
 - Layouts: `STACKED` (default) and `STAGGER_{TL,TR,BL,BR}`, with `staggerX` / `staggerY` offsets (default `14px` each).
-- `source` (`true` / `false` / `"top"`) + `sourceFilter`.
-- `target` (`true` / `false` / `"top"`) + `targetFilter`.
+- `isDrag` (`true` / `false` / `"top"`) + `canDrag`.
+- `isDrop` (`true` / `false` / `"top"`) + `canDrop`.
 - Genuinely multi-card slots: a drop **appends to the top** of the target slot; `highlight-ok` / `highlight-no` reflect
   *real* drop validity during a drag.
 
@@ -27,23 +27,23 @@ from thunks on move, matching the spec's "a move does not preserve internal stat
    bottom-right. The other three corners mirror the axis signs.
 3. **Drop = append to top; the Step-1 swap is removed.** A drop only ever moves the dragged card; nothing bounces back.
    *(Future: swap is re-enabled by a user `onDragEnd` calling `moveCard` — see Forward-looking notes.)*
-4. **`target: "top"` aliases `target: true` in Step 2.** With no positional/ghost drop zones yet, "drop anywhere in
+4. **`isDrop: "top"` aliases `isDrop: true` in Step 2.** With no positional/ghost drop zones yet, "drop anywhere in
    slot" and "drop onto top" are indistinguishable (every drop appends to top). The value is accepted and documented as
    a no-op-for-now to keep the API stable.
-5. **`targetFilter`'s `dst` = the target slot's current top card id, or `null` if the slot is empty.** This folds the
+5. **`canDrop`'s `dst` = the target slot's current top card id, or `null` if the slot is empty.** This folds the
    empty-slot case into the same `null` contract the spec reserves for ghost areas, and generalizes unchanged when
    positional targets arrive.
 6. **Draggability is reactive via a getter-backed `disabled`** (never a precomputed boolean). dnd-kit's `useDraggable`
    syncs `draggable.disabled` inside a `createEffect` (see `@dnd-kit/solid` `index.js`), so passing `disabled` as a
    getter lets any reactive source it touches (the `slotContent` "is-top" read **and** a store referenced by
-   `sourceFilter`) be tracked and update live. Users write `sourceFilter` as a plain function; no special provision is
+   `canDrag`) be tracked and update live. Users write `canDrag` as a plain function; no special provision is
    required on their side.
 7. **Highlight is shown only on the hovered target slot**, computed from a single `canDrop` predicate that
    `handleDragEnd` also uses to reject invalid drops — one source of truth, zero drift.
 8. **Layout positioning** uses **inline computed styles** (dynamic per-index `transform` + `z-index`) on
    `position: absolute` cards inside a `position: relative` mount. `STACKED` centers all cards; `STAGGER_*` anchors to
    the corner. Structural styles are set by the component so layouts work without user CSS; cosmetics stay in CSS.
-9. **Per-slot drop rules are registered into the controller**; `source` / `sourceFilter` stay local to the slot (it
+9. **Per-slot drop rules are registered into the controller**; `isDrag` / `canDrag` stay local to the slot (it
    renders its own cards). Three future-proofing seams are adopted now: a `moveCard(cardId, toSlot, index)` placement
    primitive, an isolated "resolve dnd-kit target → `(slotId, index)`" section in `handleDragEnd`, and a
    controller-owned `canDrop` with membership-mutation as the *default* action (room for future effect-only drops).
@@ -60,8 +60,8 @@ export type SlotLayout = "STACKED" | "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" 
 
 /** A slot's drop rules, registered with the controller so the central drag handler can enforce them. */
 export interface SlotConfig {
-    readonly target: boolean | "top"
-    readonly targetFilter?: (src: string, dst: string | null) => boolean
+    readonly isDrop: boolean | "top"
+    readonly canDrop?: (src: string, dst: string | null) => boolean
 }
 ```
 
@@ -73,8 +73,8 @@ reactive), e.g. from `CardSlot`:
 
 ```typescript
 const id = board.registerSlot(props.id, {
-    get target() { return props.target ?? true },
-    get targetFilter() { return props.targetFilter },
+    get isDrop() { return props.isDrop ?? true },
+    get canDrop() { return props.canDrop },
 })
 ```
 
@@ -87,10 +87,10 @@ highlight and `handleDragEnd`):
 readonly canDrop = (srcCardId: string, targetSlotId: string): boolean => {
     if (!(targetSlotId in this.slotContent)) return false
     const cfg = this.#slotConfig.get(targetSlotId)
-    const target = cfg?.target ?? true        // default permissive; "top" treated as true (Step 2)
-    if (target === false) return false
+    const isDrop = cfg?.isDrop ?? true        // default permissive; "top" treated as true (Step 2)
+    if (isDrop === false) return false
     const dst = this.topCardOf(targetSlotId) ?? null
-    return cfg?.targetFilter?.(srcCardId, dst) ?? true
+    return cfg?.canDrop?.(srcCardId, dst) ?? true
 }
 ```
 
@@ -144,14 +144,14 @@ export interface CardSlotProps {
     layout?: SlotLayout                                   // default "STACKED"
     staggerX?: string                                     // CSS unit, default "14px" (STAGGER_* only)
     staggerY?: string                                     // CSS unit, default "14px" (STAGGER_* only)
-    source?: boolean | "top"                              // default true
-    sourceFilter?: (cardId: string) => boolean
-    target?: boolean | "top"                              // default true ("top" aliases true in Step 2)
-    targetFilter?: (src: string, dst: string | null) => boolean
+    isDrag?: boolean | "top"                              // default true
+    canDrag?: (cardId: string) => boolean
+    isDrop?: boolean | "top"                              // default true ("top" aliases true in Step 2)
+    canDrop?: (src: string, dst: string | null) => boolean
 }
 ```
 
-**Registration:** `board.registerSlot(props.id, { get target()…, get targetFilter()… })` (getters as above).
+**Registration:** `board.registerSlot(props.id, { get isDrop()…, get canDrop()… })` (getters as above).
 
 **Highlight:** use `useDragOperation()` to compute a `validity` of `"none" | "ok" | "no"`, suppressing highlight on the
 slot the dragged card originates from (a same-slot drop is a no-op, so it must not read as a valid target):
@@ -184,8 +184,8 @@ compiler wrapping component-prop expressions in getters so `index`, `total`, and
                     isTop={cardId === board.topCardOf(id)}
                     staggerX={props.staggerX ?? "14px"}
                     staggerY={props.staggerY ?? "14px"}
-                    source={props.source ?? true}
-                    sourceFilter={props.sourceFilter}
+                    isDrag={props.isDrag ?? true}
+                    canDrag={props.canDrag}
                 >
                     {board.renderCard(cardId)}
                 </Card>
@@ -203,15 +203,15 @@ drag-visibility toggle:
 ```typescript
 function Card(props: {
     cardId: string; layout: SlotLayout; index: number; total: number; isTop: boolean
-    staggerX: string; staggerY: string; source: boolean | "top"
-    sourceFilter?: (cardId: string) => boolean; children?: JSX.Element
+    staggerX: string; staggerY: string; isDrag: boolean | "top"
+    canDrag?: (cardId: string) => boolean; children?: JSX.Element
 }): JSX.Element {
     const draggable = useDraggable({
         id: props.cardId,
         get disabled() {
-            const sourceOk = props.source === true || (props.source === "top" && props.isTop)
-            if (!sourceOk) return true
-            return props.sourceFilter ? !props.sourceFilter(props.cardId) : false
+            const dragOk = props.isDrag === true || (props.isDrag === "top" && props.isTop)
+            if (!dragOk) return true
+            return props.canDrag ? !props.canDrag(props.cardId) : false
         },
     })
     return (
@@ -264,14 +264,14 @@ controllers later).
 ### 5. Playground demo — `pkgs/playground`
 
 Exercise every new prop in the `playground` package (which imports from `@norswap/gameboard`). Spawn several cards,
-tracking a demo-side `Map<cardId, { suit, color }>` so the `targetFilter` example can decide by card identity (the
+tracking a demo-side `Map<cardId, { suit, color }>` so the `canDrop` example can decide by card identity (the
 controller passes only ids):
 
-- **Deck** — `layout="STACKED"`, `source="top"`: a pile; only the top card drags.
-- **Hand** — `layout="STAGGER_BR"` (or another corner), `source=true`: several fanned cards, all draggable.
-- **Discard** — `target` + `targetFilter` accepting only e.g. red cards (look up suit/color in the demo map): dragging a
+- **Deck** — `layout="STACKED"`, `isDrag="top"`: a pile; only the top card drags.
+- **Hand** — `layout="STAGGER_BR"` (or another corner), `isDrag=true`: several fanned cards, all draggable.
+- **Discard** — `isDrop` + `canDrop` accepting only e.g. red cards (look up suit/color in the demo map): dragging a
   black card over it shows `highlight-no` and bounces back; a red card appends on top.
-- **Locked** — `source={false}`: holds a card that cannot be dragged out.
+- **Locked** — `isDrag={false}`: holds a card that cannot be dragged out.
 
 ### 6. CSS — playground's `index.html` (or stylesheet)
 
@@ -287,11 +287,11 @@ controller passes only ids):
   `make typecheck pkg=@norswap/gameboard` (plus the same for `playground`).
 - Run the `playground` dev server and drive it in the browser (Playwright):
     - `STACKED` shows only the top card; `STAGGER_*` fans toward the correct corner with the top card flush in it.
-    - `source="top"` lets only the top card drag; `source=false` locks the slot.
-    - A `targetFilter`-rejected hover shows `highlight-no` and the card returns to its origin; a valid hover shows
+    - `isDrag="top"` lets only the top card drag; `isDrag=false` locks the slot.
+    - A `canDrop`-rejected hover shows `highlight-no` and the card returns to its origin; a valid hover shows
       `highlight-ok` and the drop appends on top.
     - After moving a card, it is immediately draggable again (dnd-kit re-measures on the next drag — Step 1 watch item).
-    - Getter-backed `disabled` reactivity: after dragging the top card off a `source="top"` pile, the new top becomes
+    - Getter-backed `disabled` reactivity: after dragging the top card off a `isDrag="top"` pile, the new top becomes
       draggable without interaction.
 
 ## Forward-looking notes (documented, not built)
@@ -299,13 +299,13 @@ controller passes only ids):
 - **Swap** is reintroduced later by a user `onDragEnd` (deferred) calling `moveCard` to push the displaced resident back
   to the source slot — no special-casing in the core.
 - **Positional / between-cards drop** is additive: add per-card and per-gap droppables, enrich only the isolated target
-  resolver in `handleDragEnd` to produce an insert `index`, and reuse `moveCard` unchanged. `targetFilter`'s `dst`
+  resolver in `handleDragEnd` to produce an insert `index`, and reuse `moveCard` unchanged. `canDrop`'s `dst`
   contract ("the card you'd land on", `null` if none) already generalizes.
 - **Effect-vs-move drops** (dropping onto a card for a gameplay effect rather than a move): `handleDragEnd` treats
   membership mutation as the *default* action, leaving room for the deferred `disableDragEnd` + `onDragEnd` hooks to
   suppress/augment it.
 - **Per-card / per-gap highlighting**: when cards/gaps become droppables, each computes its own highlight via the same
   controller `canDrop` predicate — the reason `canDrop` lives on the controller as the single evolvable signature.
-- **Card metadata for filters**: `sourceFilter` / `targetFilter` receive only ids, so identity-based filtering requires
+- **Card metadata for filters**: `canDrag` / `canDrop` receive only ids, so identity-based filtering requires
   the user to track their own `cardId → metadata` map (as the demo does). A future `spawn` could optionally attach
   metadata to ease this.

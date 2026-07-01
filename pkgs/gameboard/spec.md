@@ -35,24 +35,24 @@ The GameBoard manages the state via:
     - `staggerY`: idem for y-offset
     - need similar parameters to control fanout (will figure out later)
     - `staggerClass`: class class applied to the rectangle representing bottom cards when using `STAGGER_BG_XX`
-- `dragZone`: if `target == true`, either "rect" (full rectangular area of this slot), or a number that indicates a
+- `dragZone`: if `isDrop == true`, either "rect" (full rectangular area of this slot), or a number that indicates a
   minimum number of "ghost cards" to define a drag area: the drag area will be the area that that number of cards would
   cover, if there are less
   than this number of cards in this slot (if there are more, use actual cards area instead) (default: 0)
     - if `layout == FREE`, then a value of 0 becomes equivalent to "rect"
-- `source`:
+- `isDrag`:
     - true (default) if all cards can be dragged
     - false if no cards can be dragged
     - "top" if only the top card can be dragged
         - note that in some layouts (like `STACKED` or `STAGGERED_XXXXX` with narrow offsets) you will only be able to
           select the top card even if the value is `true`
-- `sourceFilter`: a function passed a card id, determining if it can be dragged (after applying the `source` criteria)
-- `target`:
+- `canDrag`: a function passed a card id, determining if it can be dragged (after applying the `isDrag` criteria)
+- `isDrop`:
     - true: cards can be dragged anywhere into this slot
     - false: cards cannot be dragged into this slot
     - top: cards can be dragged to the top of this slot
-- `targetFilter`: a function passed two card id (src and dst), determining if the source can be dragged onto the target
-    - the `target` criteria applies first
+- `canDrop`: a function passed two card id (src and dst), determining if the source can be dragged onto the target
+    - the `isDrop` criteria applies first
     - `dst` can be null if there are ghost cards
 - `classes` a set of class names to apply to the CardSlot's outer div (default: empty)
     - NOTE: the CardSlot must get added the `.highlight-ok` when hovered with a card and the drag target is valid
@@ -60,7 +60,7 @@ The GameBoard manages the state via:
 - `width`, `height`: optional size of the CardSlot area (if omitted, CardSlot will fill its container)
 - `forward`: an optional string id designating another CardSlot that the card will be sent to if the card is dropped on
   this CardSlot
-- `onClick`: a function to run if this component is clicked (doesn't disable dragging, set `source = false` for that)
+- `onClick`: a function to run if this component is clicked (doesn't disable dragging, set `isDrag = false` for that)
 - `onClickComponent`: an un-instantiated components to render (with `<Dynamic>`) when this card slot is clicked
     - the component gets passed the cards in this slot as the `cards` prop
     - it's an error if both `onClick` and `onClickComponent` are specified

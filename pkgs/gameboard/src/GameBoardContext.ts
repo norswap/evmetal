@@ -3,6 +3,19 @@ import { type Component, type Context, createComponent, createContext, type JSX,
 import { createStore, produce, type SetStoreFunction } from "solid-js/store"
 import { freshId, recordId } from "#src/utils"
 
+/** Multi-card layouts. */
+export type SlotLayout = "STACKED" | "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR"
+
+/**
+ * A slot's drop rules, determining whether a card can be dropped onto the slot.
+ *
+ * The fields are functions instead of values so that {@link CardSlot} can pass thunks to maintain reactivity.
+ */
+export interface SlotConfig {
+    readonly isDrop: () => boolean | "top"
+    readonly canDrop?: () => ((src: string, dst: string | null) => boolean) | undefined
+}
+
 /**
  * The reactive state and API for a single GameBoard, shared with descendant components via context.
  *
@@ -24,6 +37,9 @@ export class GameBoardController {
 
     /** Solid's mutator function for {@link slotContent}. */
     readonly #setSlotContent: SetStoreFunction<Record<string, string[]>>
+
+    /** Maps {@link CardSlot} id to its drop rules, so {@link handleDragEnd} can enforce them centrally. */
+    readonly #slotConfig = new Map<string, SlotConfig>()
 
     // === INIT ========================================================================================================
 
@@ -49,7 +65,7 @@ export class GameBoardController {
      * Called by {@link CardSlot} to registers itself with an id (or mints a memorable one), erroring on duplicate id.
      * @returns the slot id
      */
-    readonly registerSlot = (id?: string): string => {
+    readonly registerSlot = (id?: string, config?: SlotConfig): string => {
         let slotId: string
         if (id !== undefined) {
             if (this.#usedIds.has(id)) throw new Error(`GameBoard: duplicate id "${id}"`)
@@ -59,15 +75,57 @@ export class GameBoardController {
             slotId = freshId(this.#usedIds)
         }
         this.#setSlotContent(slotId, [])
+        if (config !== undefined) this.#slotConfig.set(slotId, config)
         onCleanup(() => {
             for (const cardId of this.slotContent[slotId]) {
                 this.#cardRegistry.delete(cardId)
                 this.#usedIds.delete(cardId)
             }
             this.#setSlotContent(produce(loc => delete loc[slotId]))
+            this.#slotConfig.delete(slotId)
             this.#usedIds.delete(slotId)
         })
         return slotId
+    }
+
+    /** Returns the topmost card id in `slotId`, or undefined if empty/unknown. */
+    readonly topCardOf = (slotId: string): string | undefined => {
+        const cards = this.slotContent[slotId]
+        return cards?.[cards.length - 1]
+    }
+
+    /**
+     * Whether the card can be dropped in the slot.
+     *
+     * Used to determine what happens when dragging the card to the slot, as well as setting the highligh-ok and
+     * highlight-no classes on the card slot.
+     */
+    readonly canDrop = (srcCardId: string, targetSlotId: string): boolean => {
+        if (!(targetSlotId in this.slotContent)) return false
+        const cfg = this.#slotConfig.get(targetSlotId)
+        const isDrop = cfg?.isDrop() ?? true
+        if (isDrop === false) return false
+        const dst = this.topCardOf(targetSlotId) ?? null
+        return cfg?.canDrop?.()?.(srcCardId, dst) ?? true
+    }
+
+    /**
+     * Removes `cardId` from its current slot and inserts it into `toSlotId` at `index` (clamped to `[0, length]`).
+     * Append with `index = length`.
+     *
+     * Currently never called for a card that is already in the destination slot.
+     */
+    readonly moveCard = (cardId: string, toSlotId: string, index: number): void => {
+        const fromSlot = this.#slotOf(cardId)
+        if (fromSlot === undefined || !(toSlotId in this.slotContent)) return
+        this.#setSlotContent(
+            produce(loc => {
+                const from = loc[fromSlot]
+                from.splice(from.indexOf(cardId), 1)
+                const to = loc[toSlotId]
+                to.splice(Math.max(0, Math.min(index, to.length)), 0, cardId)
+            }),
+        )
     }
 
     /**
@@ -95,29 +153,20 @@ export class GameBoardController {
         return this.#cardRegistry.get(cardId)?.()
     }
 
-    /** Applies the drop (single-card swap) to the location store. */
+    /** Applies a drop: moves the dragged card onto the top of a valid target slot. */
     readonly handleDragEnd = (event: Parameters<NonNullable<DragDropProviderProps["onDragEnd"]>>[0]): void => {
         if (event.canceled) return
-
         const cardId = event.operation.source?.id
+        if (typeof cardId !== "string") return
+
         const targetSlot = event.operation.target?.id
-        if (typeof cardId !== "string" || typeof targetSlot !== "string") return
-        if (!(targetSlot in this.slotContent)) return
+        if (typeof targetSlot !== "string" || !(targetSlot in this.slotContent)) return
 
         const sourceSlot = this.#slotOf(cardId)
         if (sourceSlot === undefined || sourceSlot === targetSlot) return
+        if (!this.canDrop(cardId, targetSlot)) return
 
-        this.#setSlotContent(
-            produce(loc => {
-                const sourceCards = loc[sourceSlot]
-                const targetCards = loc[targetSlot]
-                sourceCards.splice(sourceCards.indexOf(cardId), 1)
-                // Single-card swap: a card already in the target returns to the source slot.
-                const displaced = targetCards.shift()
-                if (displaced !== undefined) sourceCards.push(displaced)
-                targetCards.push(cardId)
-            }),
-        )
+        this.moveCard(cardId, targetSlot, this.slotContent[targetSlot].length)
     }
 }
 
