@@ -35,6 +35,10 @@ function Setup(): JSX.Element {
         spawnCard(board, "locked", "4♣", "black")
         spawnCard(board, "locked", "9♠", "black")
         spawnCard(board, "locked", "5♠", "black")
+        spawnCard(board, "free", "6♣", "black")
+        spawnCard(board, "free", "J♥", "red")
+        spawnCard(board, "free", "A♦", "red")
+        spawnCard(board, "free", "8♠", "black")
     })
     return null
 }
@@ -44,20 +48,24 @@ export function App(): JSX.Element {
     return (
         <main>
             <h1>Gameboard</h1>
-            <p>
-                Deck is stacked and deals from the top; hand, discard and locked fan out (centered) in different
-                directions and grow to fit their cards past a minimum size; discard accepts only red cards; the locked
-                pile can't be dragged out.
-            </p>
+            <ul>
+                <li><b>Deck</b> is stacked and deals from the tophand.</li>
+                <li><b>Discard</b> and <b>Locked</b> fan out (centered) in different directories and grow to fit their
+                    cards.
+                </li>
+                <li><b>Discard</b> accepts only red cards.</li>
+                <li><b>Locked</b> can't be dragged out of.</li>
+                <li><b>Free</b> is a custom row layout.</li>
+            </ul>
             <GameBoard>
                 <div class="demo-board">
                     <div class="demo-col">
                         <span class="demo-label">Deck (STACKED, top only)</span>
-                        <CardSlot id="deck" layout="STACKED" isDrag="top" />
+                        <CardSlot id="deck" layout="STACKED" isDrag="top"/>
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Hand (STAGGER_TL, centered)</span>
-                        <CardSlot id="hand" layout="STAGGER_TL" centered={true} grow={true} isDrag={true} />
+                        <CardSlot id="hand" layout="STAGGER_TL" centered={true} grow={true} isDrag={true}/>
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Discard (STAGGER_TR, centered, red only)</span>
@@ -71,10 +79,14 @@ export function App(): JSX.Element {
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Locked (STAGGER_BR, centered, no drag)</span>
-                        <CardSlot id="locked" layout="STAGGER_BR" centered={true} grow={true} isDrag={false} />
+                        <CardSlot id="locked" layout="STAGGER_BR" centered={true} grow={true} isDrag={false}/>
                     </div>
                 </div>
-                <Setup />
+                <div class="demo-col demo-free">
+                    <span class="demo-label">Free (FREE, CSS flex row)</span>
+                    <CardSlot id="free" layout="FREE" grow={true} isDrag={true}/>
+                </div>
+                <Setup/>
             </GameBoard>
         </main>
     )

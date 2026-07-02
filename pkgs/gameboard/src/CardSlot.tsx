@@ -30,6 +30,23 @@ export interface CardSlotProps {
 /**
  * A named drag source & drop target. The cards it contains are read from {@link GameBoardController.slotContent} and
  * laid out per its `layout`. It renders `highlight-ok` / `highlight-no` while a valid / invalid card hovers over it.
+ *
+ * ## Styling
+ *
+ * The component applies the following classes you can access for styling:
+ * - `.gb-slot` — the slot box and drop target. Note that this has height 0 by default if it contains no cards, so
+ *   height needs to be set for cards to be droppable inside. If you specify `grow: true`, use `min-{width,height}`
+ *   instead.
+ * - `.gb-slot.highlight-ok` / `.gb-slot.highlight-no` — these classes are attached to denote a card is hovering the
+ *   slot and the slot rules mark this is a valid/invalid drop.
+ * - `.gb-layout` — the single container the cards live under. Separate from `.gb-slot` for layouting purposes.
+ *   You do not need to touch this unless you are using the `"FREE"` layout, in which case it can for instance be used
+ *   as flex or grid container.
+ * - `.gb-card` — per-card wrapper. With `"FREE"` you can apply flex/grid items styles here.
+ *   It carries `data-card-id` / `data-index` attributes (can be used for CSS selection) and `--gb-index` / `--gb-count`
+ *   custom CSS properties (unitless integers, for `calc()`-driven placement).
+ *   Note: the drag overlay (copy of the card that gets dragged around) is NOT a `.gb-card` (it's its content, whatever
+ *   users pass to {@link GameBoardController#spawn}).
  */
 export function CardSlot(props: CardSlotProps): JSX.Element {
     const board = useGameBoard()
@@ -55,8 +72,8 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
             ref={el => droppable.ref(el)}
         >
             <div
-                class="gb-slot-mount"
-                style={mountStyle(
+                class="gb-layout"
+                style={layoutStyle(
                     props.grow ?? false,
                     props.layout ?? "STACKED",
                     board.slotContent[slotId].length,
@@ -118,6 +135,8 @@ function Card(props: {
     return (
         <div
             class="gb-card"
+            data-card-id={props.cardId}
+            data-index={props.index}
             style={{
                 ...cardStyle(
                     props.layout,
@@ -128,6 +147,8 @@ function Card(props: {
                     props.centered,
                     props.grow,
                 ),
+                "--gb-index": props.index,
+                "--gb-count": props.total,
                 visibility: draggable.isDragging() || draggable.isDropping() ? "hidden" : "visible",
             }}
             ref={el => draggable.ref(el)}
@@ -138,19 +159,22 @@ function Card(props: {
 }
 
 /**
- * Computes a card's placement and stacking within its slot.
+ * Computes a card's placement and stacking within its slot depending on the layout.
  *
- * `z-index = index`, so the top (last) card is front-most.
+ * `FREE` applies no positioning at all, users can provide their own by styling `.gb-card`.
+ * That includes no z-index, but the user can do that manually via the `.gb-card { z-index: var(--gb-index); }`.
  *
- * `STACKED` centers every card; `STAGGER_<corner>` offsets lower cards toward the slot interior by `steps` multiples of
- * the stagger offsets.
+ * Otherwise, `z-index = index`, so the top (last) card is front-most.
+ *
+ * `STACKED` centers every card in the slot; `STAGGER_<corner>` offsets lower cards toward the slot interior by `steps`
+ * multiples of the stagger offsets.
  *
  * When `centered`, the fan's bounding box is centered in the slot (the corner only sets the fan direction); otherwise
  * the top card is anchored flush in the named corner.
  *
- * With `grow`, the top card is the one in-flow card (`position: relative`), so it gives {@link mountStyle}'s shrink-wrap
- * a base size; a transform reproduces its fanned position without perturbing that flow box. All other cards stay
- * absolute and thus out of flow.
+ * With `grow`, the top card is the one in-flow card (`position: relative`), so it gives {@link layoutStyle}'s
+ * shrink-wrap a base size; a transform reproduces its fanned position without perturbing that flow box. All other cards
+ * stay absolute and thus out of flow.
  */
 function cardStyle(
     layout: SlotLayout,
@@ -161,6 +185,8 @@ function cardStyle(
     centered: boolean,
     grow: boolean,
 ): JSX.CSSProperties {
+    if (layout === "FREE") return {}
+
     const isAnchor = grow && index === total - 1
 
     if (layout === "STACKED") {
@@ -197,16 +223,18 @@ function cardStyle(
 }
 
 /**
- * Style for the `.gb-slot-mount`.
+ * Style for the `.gb-layout` container the cards live in.
  *
  * Without `grow` it only establishes the positioning context; the slot's size then comes entirely from consumer CSS
  * (and absolutely-positioned cards will overflow a fixed box).
  *
- * With `grow` the mount shrink-wraps its in-flow top card (see {@link cardStyle}) and reserves padding for the fan's
- * spread, so the box's border edge tracks the fan's bounding box: `STAGGER_*` reserves the spread on the fan-ward
- * side(s), or split evenly on both sides when `centered`. `STACKED` and single-card slots need no padding.
+ * With `grow` the container shrink-wraps its in-flow top card (see {@link cardStyle}) and reserves padding for the
+ * fan's spread, so the box's border edge tracks the fan's bounding box: `STAGGER_*` reserves the spread on the
+ * fan-ward side(s), or split evenly on both sides when `centered`. `STACKED`, `FREE` and single-card slots need no
+ * padding — for `FREE`, `grow` merely shrink-wraps whatever the consumer's `flex` / `grid` produces (as long as the
+ * cards stay in flow).
  */
-function mountStyle(
+function layoutStyle(
     grow: boolean,
     layout: SlotLayout,
     numCards: number,
@@ -216,7 +244,7 @@ function mountStyle(
 ): JSX.CSSProperties {
     if (!grow) return { position: "relative" }
     const base: JSX.CSSProperties = { position: "relative", width: "fit-content", height: "fit-content" }
-    if (numCards <= 1 || layout === "STACKED") return base
+    if (numCards <= 1 || layout === "STACKED" || layout === "FREE") return base
 
     if (centered) {
         const halfX = `calc(${staggerX} * (${numCards} - 1) / 2)`

@@ -3,8 +3,8 @@ import { type Component, type Context, createComponent, createContext, type JSX,
 import { createStore, produce, type SetStoreFunction } from "solid-js/store"
 import { freshId, recordId } from "#src/utils"
 
-/** Multi-card layouts. */
-export type SlotLayout = "STACKED" | "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR"
+/** Multi-card layouts. `FREE` applies no positioning, leaving card placement to consumer CSS (see {@link CardSlot}). */
+export type SlotLayout = "STACKED" | "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR" | "FREE"
 
 /**
  * A slot's drop rules, determining whether a card can be dropped onto the slot.
