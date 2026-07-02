@@ -13,6 +13,9 @@ export interface CardSlotProps {
     staggerY?: string
     /** For `STAGGER_*` layouts, whether to center or anchor to the named corner (default: false). */
     centered?: boolean
+    /** Whether to grow the slot size to accomodate all the cards.
+     * You can combine with min-{width, height} on `.gb-slot`. */
+    grow?: boolean
     /** Which cards can be dragged out: `true` = all, `false` = none, `"top"` = only the top card (default `true`). */
     isDrag?: boolean | "top"
     /** Further restricts draggability: given a card id, returns whether it may be dragged (applied after `isDrag`). */
@@ -51,7 +54,17 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
             classList={{ "highlight-ok": dropValidity() === "ok", "highlight-no": dropValidity() === "no" }}
             ref={el => droppable.ref(el)}
         >
-            <div class="gb-slot-mount" style={{ position: "relative" }}>
+            <div
+                class="gb-slot-mount"
+                style={mountStyle(
+                    props.grow ?? false,
+                    props.layout ?? "STACKED",
+                    board.slotContent[slotId].length,
+                    props.staggerX ?? "14px",
+                    props.staggerY ?? "14px",
+                    props.centered ?? false,
+                )}
+            >
                 <For each={board.slotContent[slotId]}>
                     {(cardId, index) => (
                         <Card
@@ -63,6 +76,7 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
                             staggerX={props.staggerX ?? "14px"}
                             staggerY={props.staggerY ?? "14px"}
                             centered={props.centered ?? false}
+                            grow={props.grow ?? false}
                             isDrag={props.isDrag ?? true}
                             canDrag={props.canDrag}
                         >
@@ -88,6 +102,7 @@ function Card(props: {
     staggerX: string
     staggerY: string
     centered: boolean
+    grow: boolean
     isDrag: boolean | "top"
     canDrag?: (cardId: string) => boolean
     children?: JSX.Element
@@ -104,7 +119,15 @@ function Card(props: {
         <div
             class="gb-card"
             style={{
-                ...cardStyle(props.layout, props.index, props.total, props.staggerX, props.staggerY, props.centered),
+                ...cardStyle(
+                    props.layout,
+                    props.index,
+                    props.total,
+                    props.staggerX,
+                    props.staggerY,
+                    props.centered,
+                    props.grow,
+                ),
                 visibility: draggable.isDragging() || draggable.isDropping() ? "hidden" : "visible",
             }}
             ref={el => draggable.ref(el)}
@@ -115,10 +138,19 @@ function Card(props: {
 }
 
 /**
- * Computes a card's absolute placement and stacking within its slot. `z-index = index`, so the top (last) card is
- * front-most. `STACKED` centers every card; `STAGGER_<corner>` offsets lower cards toward the slot interior by `steps`
- * multiples of the stagger offsets. When `centered`, the fan's bounding box is centered in the slot (the corner only
- * sets the fan direction); otherwise the top card is anchored flush in the named corner.
+ * Computes a card's placement and stacking within its slot.
+ *
+ * `z-index = index`, so the top (last) card is front-most.
+ *
+ * `STACKED` centers every card; `STAGGER_<corner>` offsets lower cards toward the slot interior by `steps` multiples of
+ * the stagger offsets.
+ *
+ * When `centered`, the fan's bounding box is centered in the slot (the corner only sets the fan direction); otherwise
+ * the top card is anchored flush in the named corner.
+ *
+ * With `grow`, the top card is the one in-flow card (`position: relative`), so it gives {@link mountStyle}'s shrink-wrap
+ * a base size; a transform reproduces its fanned position without perturbing that flow box. All other cards stay
+ * absolute and thus out of flow.
  */
 function cardStyle(
     layout: SlotLayout,
@@ -127,9 +159,14 @@ function cardStyle(
     sx: string,
     sy: string,
     centered: boolean,
+    grow: boolean,
 ): JSX.CSSProperties {
-    if (layout === "STACKED")
+    const isAnchor = grow && index === total - 1
+
+    if (layout === "STACKED") {
+        if (isAnchor) return { position: "relative", "z-index": index }
         return { position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", "z-index": index }
+    }
 
     const steps = total - 1 - index
     const base = { position: "absolute" as const, "z-index": index }
@@ -139,8 +176,11 @@ function cardStyle(
         const dirY = layout === "STAGGER_BL" || layout === "STAGGER_BR" ? -1 : 1
         const ox = `calc(${dirX} * ${sx} * (${steps} - (${total} - 1) / 2))`
         const oy = `calc(${dirY} * ${sy} * (${steps} - (${total} - 1) / 2))`
+        if (isAnchor) return { position: "relative", transform: `translate(${ox}, ${oy})`, "z-index": index }
         return { ...base, top: "50%", left: "50%", transform: `translate(-50%, -50%) translate(${ox}, ${oy})` }
     }
+
+    if (isAnchor) return { position: "relative", "z-index": index }
 
     const dx = `calc(${sx} * ${steps})`
     const dy = `calc(${sy} * ${steps})`
@@ -153,5 +193,47 @@ function cardStyle(
             return { ...base, bottom: 0, left: 0, transform: `translate(${dx}, calc(-1 * ${dy}))` }
         case "STAGGER_BR":
             return { ...base, bottom: 0, right: 0, transform: `translate(calc(-1 * ${dx}), calc(-1 * ${dy}))` }
+    }
+}
+
+/**
+ * Style for the `.gb-slot-mount`.
+ *
+ * Without `grow` it only establishes the positioning context; the slot's size then comes entirely from consumer CSS
+ * (and absolutely-positioned cards will overflow a fixed box).
+ *
+ * With `grow` the mount shrink-wraps its in-flow top card (see {@link cardStyle}) and reserves padding for the fan's
+ * spread, so the box's border edge tracks the fan's bounding box: `STAGGER_*` reserves the spread on the fan-ward
+ * side(s), or split evenly on both sides when `centered`. `STACKED` and single-card slots need no padding.
+ */
+function mountStyle(
+    grow: boolean,
+    layout: SlotLayout,
+    numCards: number,
+    staggerX: string,
+    staggerY: string,
+    centered: boolean,
+): JSX.CSSProperties {
+    if (!grow) return { position: "relative" }
+    const base: JSX.CSSProperties = { position: "relative", width: "fit-content", height: "fit-content" }
+    if (numCards <= 1 || layout === "STACKED") return base
+
+    if (centered) {
+        const halfX = `calc(${staggerX} * (${numCards} - 1) / 2)`
+        const halfY = `calc(${staggerY} * (${numCards} - 1) / 2)`
+        return { ...base, "padding-left": halfX, "padding-right": halfX, "padding-top": halfY, "padding-bottom": halfY }
+    }
+
+    const fanX = `calc(${staggerX} * (${numCards} - 1))`
+    const fanY = `calc(${staggerY} * (${numCards} - 1))`
+    switch (layout) {
+        case "STAGGER_TL":
+            return { ...base, "padding-right": fanX, "padding-bottom": fanY }
+        case "STAGGER_TR":
+            return { ...base, "padding-left": fanX, "padding-bottom": fanY }
+        case "STAGGER_BL":
+            return { ...base, "padding-right": fanX, "padding-top": fanY }
+        case "STAGGER_BR":
+            return { ...base, "padding-left": fanX, "padding-top": fanY }
     }
 }

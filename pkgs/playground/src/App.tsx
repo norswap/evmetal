@@ -46,7 +46,8 @@ export function App(): JSX.Element {
             <h1>Gameboard</h1>
             <p>
                 Deck is stacked and deals from the top; hand, discard and locked fan out (centered) in different
-                directions; discard accepts only red cards; the locked pile can't be dragged out.
+                directions and grow to fit their cards past a minimum size; discard accepts only red cards; the locked
+                pile can't be dragged out.
             </p>
             <GameBoard>
                 <div class="demo-board">
@@ -56,7 +57,7 @@ export function App(): JSX.Element {
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Hand (STAGGER_TL, centered)</span>
-                        <CardSlot id="hand" layout="STAGGER_TL" centered={true} isDrag={true} />
+                        <CardSlot id="hand" layout="STAGGER_TL" centered={true} grow={true} isDrag={true} />
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Discard (STAGGER_TR, centered, red only)</span>
@@ -64,12 +65,13 @@ export function App(): JSX.Element {
                             id="discard"
                             layout="STAGGER_TR"
                             centered={true}
+                            grow={true}
                             canDrop={src => cardMeta.get(src)?.color === "red"}
                         />
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Locked (STAGGER_BR, centered, no drag)</span>
-                        <CardSlot id="locked" layout="STAGGER_BR" centered={true} isDrag={false} />
+                        <CardSlot id="locked" layout="STAGGER_BR" centered={true} grow={true} isDrag={false} />
                     </div>
                 </div>
                 <Setup />
