@@ -3,8 +3,31 @@ import { type Component, type Context, createComponent, createContext, type JSX,
 import { createStore, produce, type SetStoreFunction } from "solid-js/store"
 import { freshId, recordId } from "#src/utils"
 
-/** Multi-card layouts. `FREE` applies no positioning, leaving card placement to consumer CSS (see {@link CardSlot}). */
-export type SlotLayout = "STACKED" | "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR" | "FREE"
+/**
+ * The positioning strategy for a slot's cards, without any options. `STACKED` centers every card; `STAGGER_*` fans
+ * them toward the named corner; `FREE` applies no positioning, leaving card placement to consumer CSS (see
+ * {@link CardSlot}). See {@link SlotLayout} for the option-carrying form used by the `layout` prop.
+ */
+export type SlotLayoutKind = "STACKED" | "FREE" | StaggerLayout
+
+/** The corner-fanning subset of {@link SlotLayoutKind} — the only layouts that accept stagger options. */
+export type StaggerLayout = "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR"
+
+/**
+ * A slot layout together with the options that only make sense for it.
+ */
+export type SlotLayout =
+    | { kind: "STACKED" }
+    | { kind: "FREE" }
+    | {
+          kind: StaggerLayout
+          /** Per-card x-offset as a CSS unit (default `"14px"`). */
+          staggerX?: string
+          /** Per-card y-offset as a CSS unit (default `"14px"`). */
+          staggerY?: string
+          /** Whether to center or anchor to the named corner (default: false). */
+          centered?: boolean
+      }
 
 /**
  * A slot's drop rules, determining whether a card can be dropped onto the slot.

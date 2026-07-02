@@ -4,5 +4,7 @@ export {
     GameBoardController,
     type SlotConfig,
     type SlotLayout,
+    type SlotLayoutKind,
+    type StaggerLayout,
     useGameBoard,
 } from "#src/GameBoardContext"

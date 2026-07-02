@@ -49,44 +49,57 @@ export function App(): JSX.Element {
         <main>
             <h1>Gameboard</h1>
             <ul>
-                <li><b>Deck</b> is stacked and deals from the tophand.</li>
-                <li><b>Discard</b> and <b>Locked</b> fan out (centered) in different directories and grow to fit their
+                <li>
+                    <b>Deck</b> is stacked and deals from the tophand.
+                </li>
+                <li>
+                    <b>Discard</b> and <b>Locked</b> fan out (centered) in different directories and grow to fit their
                     cards.
                 </li>
-                <li><b>Discard</b> accepts only red cards.</li>
-                <li><b>Locked</b> can't be dragged out of.</li>
-                <li><b>Free</b> is a custom row layout.</li>
+                <li>
+                    <b>Discard</b> accepts only red cards.
+                </li>
+                <li>
+                    <b>Locked</b> can't be dragged out of.
+                </li>
+                <li>
+                    <b>Free</b> is a custom row layout.
+                </li>
             </ul>
             <GameBoard>
                 <div class="demo-board">
                     <div class="demo-col">
                         <span class="demo-label">Deck (STACKED, top only)</span>
-                        <CardSlot id="deck" layout="STACKED" isDrag="top"/>
+                        <CardSlot id="deck" layout="STACKED" isDrag="top" />
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Hand (STAGGER_TL, centered)</span>
-                        <CardSlot id="hand" layout="STAGGER_TL" centered={true} grow={true} isDrag={true}/>
+                        <CardSlot id="hand" layout={{ kind: "STAGGER_TL", centered: true }} grow={true} isDrag={true} />
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Discard (STAGGER_TR, centered, red only)</span>
                         <CardSlot
                             id="discard"
-                            layout="STAGGER_TR"
-                            centered={true}
+                            layout={{ kind: "STAGGER_TR", centered: true }}
                             grow={true}
                             canDrop={src => cardMeta.get(src)?.color === "red"}
                         />
                     </div>
                     <div class="demo-col">
                         <span class="demo-label">Locked (STAGGER_BR, centered, no drag)</span>
-                        <CardSlot id="locked" layout="STAGGER_BR" centered={true} grow={true} isDrag={false}/>
+                        <CardSlot
+                            id="locked"
+                            layout={{ kind: "STAGGER_BR", centered: true }}
+                            grow={true}
+                            isDrag={false}
+                        />
                     </div>
                 </div>
                 <div class="demo-col demo-free">
                     <span class="demo-label">Free (FREE, CSS flex row)</span>
-                    <CardSlot id="free" layout="FREE" grow={true} isDrag={true}/>
+                    <CardSlot id="free" layout="FREE" grow={true} isDrag={true} />
                 </div>
-                <Setup/>
+                <Setup />
             </GameBoard>
         </main>
     )

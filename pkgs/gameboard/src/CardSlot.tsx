@@ -1,19 +1,14 @@
 import { useDraggable, useDragOperation, useDroppable } from "@dnd-kit/solid"
-import { For, type JSX } from "solid-js"
-import { type SlotLayout, useGameBoard } from "./GameBoardContext"
+import { createMemo, For, type JSX } from "solid-js"
+import { type SlotLayout, type SlotLayoutKind, useGameBoard } from "./GameBoardContext"
 
 export interface CardSlotProps {
     /** Unique slot id within the board; a memorable one is minted if omitted. */
     id?: string
-    /** How the slot's cards are positioned (default `"STACKED"`). */
-    layout?: SlotLayout
-    /** Per-card x-offset for `STAGGER_*` layouts, as a CSS unit (default `"14px"`). */
-    staggerX?: string
-    /** Per-card y-offset for `STAGGER_*` layouts, as a CSS unit (default `"14px"`). */
-    staggerY?: string
-    /** For `STAGGER_*` layouts, whether to center or anchor to the named corner (default: false). */
-    centered?: boolean
-    /** Whether to grow the slot size to accomodate all the cards.
+    /** How the slot's cards are positioned, with its layout-specific options (default `{ kind: "STACKED" }`). A bare
+     * {@link SlotLayoutKind} string is accepted as shorthand for the optionless `{ kind }`. */
+    layout?: SlotLayoutKind | SlotLayout
+    /** Whether to grow the slot size to accomodate all the cards (works with every layout).
      * You can combine with min-{width, height} on `.gb-slot`. */
     grow?: boolean
     /** Which cards can be dragged out: `true` = all, `false` = none, `"top"` = only the top card (default `true`). */
@@ -50,6 +45,7 @@ export interface CardSlotProps {
  */
 export function CardSlot(props: CardSlotProps): JSX.Element {
     const board = useGameBoard()
+    const layout = createMemo(() => resolveLayout(props.layout))
     const slotId = board.registerSlot(props.id, {
         isDrop: () => props.isDrop ?? true,
         canDrop: () => props.canDrop,
@@ -71,28 +67,15 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
             classList={{ "highlight-ok": dropValidity() === "ok", "highlight-no": dropValidity() === "no" }}
             ref={el => droppable.ref(el)}
         >
-            <div
-                class="gb-layout"
-                style={layoutStyle(
-                    props.grow ?? false,
-                    props.layout ?? "STACKED",
-                    board.slotContent[slotId].length,
-                    props.staggerX ?? "14px",
-                    props.staggerY ?? "14px",
-                    props.centered ?? false,
-                )}
-            >
+            <div class="gb-layout" style={layoutStyle(props.grow ?? false, layout(), board.slotContent[slotId].length)}>
                 <For each={board.slotContent[slotId]}>
                     {(cardId, index) => (
                         <Card
                             cardId={cardId}
-                            layout={props.layout ?? "STACKED"}
+                            layout={layout()}
                             index={index()}
                             total={board.slotContent[slotId].length}
                             isTop={cardId === board.topCardOf(slotId)}
-                            staggerX={props.staggerX ?? "14px"}
-                            staggerY={props.staggerY ?? "14px"}
-                            centered={props.centered ?? false}
                             grow={props.grow ?? false}
                             isDrag={props.isDrag ?? true}
                             canDrag={props.canDrag}
@@ -112,13 +95,10 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
  */
 function Card(props: {
     cardId: string
-    layout: SlotLayout
+    layout: ResolvedLayout
     index: number
     total: number
     isTop: boolean
-    staggerX: string
-    staggerY: string
-    centered: boolean
     grow: boolean
     isDrag: boolean | "top"
     canDrag?: (cardId: string) => boolean
@@ -138,15 +118,7 @@ function Card(props: {
             data-card-id={props.cardId}
             data-index={props.index}
             style={{
-                ...cardStyle(
-                    props.layout,
-                    props.index,
-                    props.total,
-                    props.staggerX,
-                    props.staggerY,
-                    props.centered,
-                    props.grow,
-                ),
+                ...cardStyle(props.layout, props.index, props.total, props.grow),
                 "--gb-index": props.index,
                 "--gb-count": props.total,
                 visibility: draggable.isDragging() || draggable.isDropping() ? "hidden" : "visible",
@@ -156,6 +128,28 @@ function Card(props: {
             {props.children}
         </div>
     )
+}
+
+/** A {@link SlotLayout} with the `STAGGER_*` options defaulted, so consumers can read them without fallbacks. */
+type ResolvedLayout = RequiredMembers<SlotLayout>
+
+// Needed to distribute over the SlotLayout union.
+type RequiredMembers<T> = T extends unknown ? Required<T> : never
+
+/**
+ * Normalizes the `layout` prop (a bare {@link SlotLayoutKind} string, a {@link SlotLayout} object, or undefined) into a
+ * {@link ResolvedLayout}, defaulting to `STACKED` and filling in the `STAGGER_*` options.
+ */
+function resolveLayout(layout: SlotLayoutKind | SlotLayout | undefined): ResolvedLayout {
+    const l: SlotLayout =
+        typeof layout === "string" ? ({ kind: layout } as SlotLayout) : (layout ?? { kind: "STACKED" })
+    if (l.kind === "STACKED" || l.kind === "FREE") return { kind: l.kind }
+    return {
+        kind: l.kind,
+        staggerX: l.staggerX ?? "14px",
+        staggerY: l.staggerY ?? "14px",
+        centered: l.centered ?? false,
+    }
 }
 
 /**
@@ -176,30 +170,23 @@ function Card(props: {
  * shrink-wrap a base size; a transform reproduces its fanned position without perturbing that flow box. All other cards
  * stay absolute and thus out of flow.
  */
-function cardStyle(
-    layout: SlotLayout,
-    index: number,
-    total: number,
-    sx: string,
-    sy: string,
-    centered: boolean,
-    grow: boolean,
-): JSX.CSSProperties {
-    if (layout === "FREE") return {}
+function cardStyle(layout: ResolvedLayout, index: number, total: number, grow: boolean): JSX.CSSProperties {
+    if (layout.kind === "FREE") return {}
 
     const isAnchor = grow && index === total - 1
 
-    if (layout === "STACKED") {
+    if (layout.kind === "STACKED") {
         if (isAnchor) return { position: "relative", "z-index": index }
         return { position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", "z-index": index }
     }
 
+    const { kind, staggerX: sx, staggerY: sy, centered } = layout
     const steps = total - 1 - index
     const base = { position: "absolute" as const, "z-index": index }
 
     if (centered) {
-        const dirX = layout === "STAGGER_TR" || layout === "STAGGER_BR" ? -1 : 1
-        const dirY = layout === "STAGGER_BL" || layout === "STAGGER_BR" ? -1 : 1
+        const dirX = kind === "STAGGER_TR" || kind === "STAGGER_BR" ? -1 : 1
+        const dirY = kind === "STAGGER_BL" || kind === "STAGGER_BR" ? -1 : 1
         const ox = `calc(${dirX} * ${sx} * (${steps} - (${total} - 1) / 2))`
         const oy = `calc(${dirY} * ${sy} * (${steps} - (${total} - 1) / 2))`
         if (isAnchor) return { position: "relative", transform: `translate(${ox}, ${oy})`, "z-index": index }
@@ -210,7 +197,7 @@ function cardStyle(
 
     const dx = `calc(${sx} * ${steps})`
     const dy = `calc(${sy} * ${steps})`
-    switch (layout) {
+    switch (kind) {
         case "STAGGER_TL":
             return { ...base, top: 0, left: 0, transform: `translate(${dx}, ${dy})` }
         case "STAGGER_TR":
@@ -234,17 +221,12 @@ function cardStyle(
  * padding — for `FREE`, `grow` merely shrink-wraps whatever the consumer's `flex` / `grid` produces (as long as the
  * cards stay in flow).
  */
-function layoutStyle(
-    grow: boolean,
-    layout: SlotLayout,
-    numCards: number,
-    staggerX: string,
-    staggerY: string,
-    centered: boolean,
-): JSX.CSSProperties {
+function layoutStyle(grow: boolean, layout: ResolvedLayout, numCards: number): JSX.CSSProperties {
     if (!grow) return { position: "relative" }
     const base: JSX.CSSProperties = { position: "relative", width: "fit-content", height: "fit-content" }
-    if (numCards <= 1 || layout === "STACKED" || layout === "FREE") return base
+    if (numCards <= 1 || layout.kind === "STACKED" || layout.kind === "FREE") return base
+
+    const { kind, staggerX, staggerY, centered } = layout
 
     if (centered) {
         const halfX = `calc(${staggerX} * (${numCards} - 1) / 2)`
@@ -254,7 +236,7 @@ function layoutStyle(
 
     const fanX = `calc(${staggerX} * (${numCards} - 1))`
     const fanY = `calc(${staggerY} * (${numCards} - 1))`
-    switch (layout) {
+    switch (kind) {
         case "STAGGER_TL":
             return { ...base, "padding-right": fanX, "padding-bottom": fanY }
         case "STAGGER_TR":
