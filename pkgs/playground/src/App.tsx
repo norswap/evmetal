@@ -39,6 +39,10 @@ function Setup(): JSX.Element {
         spawnCard(board, "free", "J♥", "red")
         spawnCard(board, "free", "A♦", "red")
         spawnCard(board, "free", "8♠", "black")
+        spawnCard(board, "stagger-row", "6♣", "black")
+        spawnCard(board, "stagger-row", "J♥", "red")
+        spawnCard(board, "stagger-row", "A♦", "red")
+        spawnCard(board, "stagger-row", "8♠", "black")
     })
     return null
 }
@@ -64,6 +68,9 @@ export function App(): JSX.Element {
                 </li>
                 <li>
                     <b>Free</b> is a custom row layout.
+                </li>
+                <li>
+                    <b>Horizontal stagger</b> is a row layout using the <b>STAGGER_TR</b> layout and a large offset.
                 </li>
             </ul>
             <GameBoard>
@@ -95,9 +102,20 @@ export function App(): JSX.Element {
                         />
                     </div>
                 </div>
-                <div class="demo-col demo-free">
-                    <span class="demo-label">Free (FREE, CSS flex row)</span>
-                    <CardSlot id="free" layout="FREE" grow={true} isDrag={true} />
+                <div class="demo-rows">
+                    <div class="demo-col demo-free">
+                        <span class="demo-label">Free (FREE, CSS flex row)</span>
+                        <CardSlot id="free" layout="FREE" grow={true} isDrag={true} />
+                    </div>
+                    <div class="demo-col">
+                        <span class="demo-label">Stagger row (STAGGER_TR, large offset)</span>
+                        <CardSlot
+                            id="stagger-row"
+                            layout={{ kind: "STAGGER_TR", staggerX: "116px", staggerY: "0px" }}
+                            grow={true}
+                            isDrag={true}
+                        />
+                    </div>
                 </div>
                 <Setup />
             </GameBoard>
