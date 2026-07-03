@@ -18,7 +18,7 @@ export type StaggerLayout = "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGE
  */
 export type SlotLayout =
     | { kind: "STACKED" }
-    | { kind: "FREE" }
+    | { kind: "FREE"; maxDisplayed?: number }
     | {
           kind: StaggerLayout
           /** Per-card x-offset as a CSS unit (default `"14px"`). */
@@ -27,6 +27,9 @@ export type SlotLayout =
           staggerY?: string
           /** Whether to center or anchor to the named corner (default: false). */
           centered?: boolean
+          /** Caps how many cards are rendered. When cards are hidden, the bottom-most displayed card gets the
+           * `.gb-more` class and a `--gb-hidden` count for styling (see {@link CardSlot}). Omit or 0 for no cap. */
+          maxDisplayed?: number
       }
 
 /**

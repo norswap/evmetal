@@ -29,12 +29,24 @@ function Setup(): JSX.Element {
         spawnCard(board, "hand", "A♠", "black")
         spawnCard(board, "hand", "10♥", "red")
         spawnCard(board, "hand", "J♦", "red")
+        spawnCard(board, "hand", "2♦", "red")
+        spawnCard(board, "hand", "3♣", "black")
+        spawnCard(board, "hand", "4♥", "red")
+        spawnCard(board, "hand", "5♦", "red")
         spawnCard(board, "discard", "3♥", "red")
         spawnCard(board, "discard", "8♦", "red")
         spawnCard(board, "discard", "K♥", "red")
+        spawnCard(board, "discard", "2♥", "red")
+        spawnCard(board, "discard", "4♦", "red")
+        spawnCard(board, "discard", "6♥", "red")
+        spawnCard(board, "discard", "7♦", "red")
         spawnCard(board, "locked", "4♣", "black")
         spawnCard(board, "locked", "9♠", "black")
         spawnCard(board, "locked", "5♠", "black")
+        spawnCard(board, "locked", "6♠", "black")
+        spawnCard(board, "locked", "7♣", "black")
+        spawnCard(board, "locked", "8♣", "black")
+        spawnCard(board, "locked", "10♠", "black")
         spawnCard(board, "free", "6♣", "black")
         spawnCard(board, "free", "J♥", "red")
         spawnCard(board, "free", "A♦", "red")
@@ -79,24 +91,29 @@ export function App(): JSX.Element {
                         <span class="demo-label">Deck (STACKED, top only)</span>
                         <CardSlot id="deck" layout="STACKED" isDrag="top" />
                     </div>
-                    <div class="demo-col">
+                    <div class="demo-col demo-tl">
                         <span class="demo-label">Hand (STAGGER_TL, centered)</span>
-                        <CardSlot id="hand" layout={{ kind: "STAGGER_TL", centered: true }} grow={true} isDrag={true} />
+                        <CardSlot
+                            id="hand"
+                            layout={{ kind: "STAGGER_TL", centered: true, maxDisplayed: 4 }}
+                            grow={true}
+                            isDrag={true}
+                        />
                     </div>
-                    <div class="demo-col">
+                    <div class="demo-col demo-tr">
                         <span class="demo-label">Discard (STAGGER_TR, centered, red only)</span>
                         <CardSlot
                             id="discard"
-                            layout={{ kind: "STAGGER_TR", centered: true }}
+                            layout={{ kind: "STAGGER_TR", centered: true, maxDisplayed: 4 }}
                             grow={true}
                             canDrop={src => cardMeta.get(src)?.color === "red"}
                         />
                     </div>
-                    <div class="demo-col">
+                    <div class="demo-col demo-br">
                         <span class="demo-label">Locked (STAGGER_BR, centered, no drag)</span>
                         <CardSlot
                             id="locked"
-                            layout={{ kind: "STAGGER_BR", centered: true }}
+                            layout={{ kind: "STAGGER_BR", centered: true, maxDisplayed: 4 }}
                             grow={true}
                             isDrag={false}
                         />

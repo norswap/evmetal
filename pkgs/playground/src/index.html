@@ -1,85 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Gameboard</title>
-        <style>
-            body {
-                font-family: system-ui, sans-serif;
-                margin: 2rem;
-            }
-            .demo-board {
-                display: flex;
-                gap: 1.5rem;
-                align-items: flex-start;
-            }
-            .demo-col {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-            .demo-label {
-                font-size: 0.8rem;
-                color: #555;
-            }
-            .gb-slot {
-                min-width: 160px;
-                min-height: 210px;
-                padding: 12px;
-                border: 2px dashed #bbb;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .gb-slot.highlight-ok {
-                border-color: #2e7d32;
-                background: #e8f5e9;
-            }
-            .gb-slot.highlight-no {
-                border-color: #c62828;
-                background: #ffebee;
-            }
-            .gb-layout {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .gb-card {
-                cursor: grab;
-            }
-            /* FREE layout: a horizontal row of cards, arranged purely in CSS. */
-            .demo-free {
-                margin-top: 1.5rem;
-            }
-            .demo-free .gb-layout {
-                display: flex;
-                flex-direction: row;
-                justify-content: flex-start;
-                align-items: center;
-                gap: 16px;
-            }
-            .demo-card {
-                width: 100px;
-                height: 150px;
-                border-radius: 8px;
-                border: 1px solid #999;
-                background: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.6rem;
-                user-select: none;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            }
-        </style>
-    </head>
-    <body>
-        <div id="root"></div>
-        <script type="module" src="./index.tsx"></script>
-    </body>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Gameboard</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 2rem;
+        }
+
+        .demo-board {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .demo-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .demo-label {
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        .gb-slot {
+            min-width: 160px;
+            min-height: 210px;
+            padding: 12px;
+            border: 2px dashed #bbb;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gb-slot.highlight-ok {
+            border-color: #2e7d32;
+            background: #e8f5e9;
+        }
+
+        .gb-slot.highlight-no {
+            border-color: #c62828;
+            background: #ffebee;
+        }
+
+        .gb-layout {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gb-card {
+            cursor: grab;
+        }
+
+        /* `maxDisplayed` overflow cue: progressively darker grey slivers peeking out behind the bottom displayed card,
+           offset in the direction the stagger runs (set per corner via --dx / --dy). Kept grey (not white) so they read
+           as the compressed edge of a deck underneath, distinct from the white face-up cards of the stagger fan. */
+        .gb-more {
+            --edge: 5px;
+            border-radius: 8px;
+            box-shadow:
+                calc(var(--dx) * var(--edge)) calc(var(--dy) * var(--edge)) 0 0 #cfcfcf,
+                calc(var(--dx) * var(--edge) * 2) calc(var(--dy) * var(--edge) * 2) 0 0 #b0b0b0,
+                calc(var(--dx) * var(--edge) * 3) calc(var(--dy) * var(--edge) * 3) 0 0 #8f8f8f;
+        }
+
+        .demo-tl { --dx: 1; --dy: 1; }
+        .demo-tr { --dx: -1; --dy: 1; }
+        .demo-br { --dx: -1; --dy: -1; }
+
+        .demo-rows {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            margin-top: 1.5rem;
+        }
+
+        /* FREE layout: a horizontal row of cards, arranged purely in CSS. */
+        .demo-free .gb-layout {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .demo-card {
+            width: 100px;
+            height: 150px;
+            border-radius: 8px;
+            border: 1px solid #999;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="./index.tsx"></script>
+</body>
 </html>

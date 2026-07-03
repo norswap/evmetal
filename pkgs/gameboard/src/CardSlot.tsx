@@ -42,6 +42,9 @@ export interface CardSlotProps {
  *   custom CSS properties (unitless integers, for `calc()`-driven placement).
  *   Note: the drag overlay (copy of the card that gets dragged around) is NOT a `.gb-card` (it's its content, whatever
  *   users pass to {@link GameBoardController#spawn}).
+ * - `.gb-more` — added to the bottom-most displayed `.gb-card` only when `maxDisplayed` hides deeper cards in some
+ *   layouts. Use it to style to signal the stack runs deeper. It carries a `--gb-hidden` custom property with the
+ *   number of hidden cards.
  */
 export function CardSlot(props: CardSlotProps): JSX.Element {
     const board = useGameBoard()
@@ -52,6 +55,15 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
     })
     const droppable = useDroppable({ id: slotId })
     const op = useDragOperation()
+
+    // The top `maxDisplayed` cards actually rendered, plus how many deeper ones are dropped from the DOM.
+    const displayed = createMemo((): { cards: string[], hidden: number } => {
+        const cards = board.slotContent[slotId]
+        const l = layout()
+        const max = "maxDisplayed" in l ? l.maxDisplayed : 0
+        if (max <= 0 || cards.length <= max) return { cards, hidden: 0 }
+        return { cards: cards.slice(cards.length - max), hidden: cards.length - max }
+    })
 
     // "none" unless a card from another slot is hovering here; then "ok"/"no" per the controller's drop predicate.
     const dropValidity = (): "none" | "ok" | "no" => {
@@ -67,18 +79,19 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
             classList={{ "highlight-ok": dropValidity() === "ok", "highlight-no": dropValidity() === "no" }}
             ref={el => droppable.ref(el)}
         >
-            <div class="gb-layout" style={layoutStyle(props.grow ?? false, layout(), board.slotContent[slotId].length)}>
-                <For each={board.slotContent[slotId]}>
+            <div class="gb-layout" style={layoutStyle(props.grow ?? false, layout(), displayed().cards.length)}>
+                <For each={displayed().cards}>
                     {(cardId, index) => (
                         <Card
                             cardId={cardId}
                             layout={layout()}
                             index={index()}
-                            total={board.slotContent[slotId].length}
+                            total={displayed().cards.length}
                             isTop={cardId === board.topCardOf(slotId)}
                             grow={props.grow ?? false}
                             isDrag={props.isDrag ?? true}
                             canDrag={props.canDrag}
+                            hidden={index() === 0 ? displayed().hidden : 0}
                         >
                             {board.renderCard(cardId)}
                         </Card>
@@ -102,6 +115,7 @@ function Card(props: {
     grow: boolean
     isDrag: boolean | "top"
     canDrag?: (cardId: string) => boolean
+    hidden: number
     children?: JSX.Element
 }): JSX.Element {
     const draggable = useDraggable({
@@ -115,12 +129,14 @@ function Card(props: {
     return (
         <div
             class="gb-card"
+            classList={{ "gb-more": props.hidden > 0 }}
             data-card-id={props.cardId}
             data-index={props.index}
             style={{
                 ...cardStyle(props.layout, props.index, props.total, props.grow),
                 "--gb-index": props.index,
                 "--gb-count": props.total,
+                "--gb-hidden": props.hidden,
                 visibility: draggable.isDragging() || draggable.isDropping() ? "hidden" : "visible",
             }}
             ref={el => draggable.ref(el)}
@@ -138,17 +154,19 @@ type RequiredMembers<T> = T extends unknown ? Required<T> : never
 
 /**
  * Normalizes the `layout` prop (a bare {@link SlotLayoutKind} string, a {@link SlotLayout} object, or undefined) into a
- * {@link ResolvedLayout}, defaulting to `STACKED` and filling in the `STAGGER_*` options.
+ * {@link ResolvedLayout}, defaulting to `STACKED` and filling in the per-kind options.
  */
 function resolveLayout(layout: SlotLayoutKind | SlotLayout | undefined): ResolvedLayout {
     const l: SlotLayout =
         typeof layout === "string" ? ({ kind: layout } as SlotLayout) : (layout ?? { kind: "STACKED" })
-    if (l.kind === "STACKED" || l.kind === "FREE") return { kind: l.kind }
+    if (l.kind === "STACKED") return { kind: l.kind }
+    if (l.kind === "FREE") return { kind: l.kind, maxDisplayed: l.maxDisplayed ?? 0 }
     return {
         kind: l.kind,
         staggerX: l.staggerX ?? "14px",
         staggerY: l.staggerY ?? "14px",
         centered: l.centered ?? false,
+        maxDisplayed: l.maxDisplayed ?? 0,
     }
 }
 
