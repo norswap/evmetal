@@ -4,13 +4,13 @@ import { createStore, produce, type SetStoreFunction } from "solid-js/store"
 import { freshId, recordId } from "#src/utils"
 
 /**
- * The positioning strategy for a slot's cards, without any options. `STACKED` centers every card; `STAGGER_*` fans
+ * The positioning strategy for a slot's cards, without any options. `STACKED` centers every card; `STAGGER_*` staggers
  * them toward the named corner; `FREE` applies no positioning, leaving card placement to consumer CSS (see
  * {@link CardSlot}). See {@link SlotLayout} for the option-carrying form used by the `layout` prop.
  */
 export type SlotLayoutKind = "STACKED" | "FREE" | StaggerLayout
 
-/** The corner-fanning subset of {@link SlotLayoutKind} — the only layouts that accept stagger options. */
+/** The corner-staggering subset of {@link SlotLayoutKind} — the only layouts that accept stagger options. */
 export type StaggerLayout = "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR"
 
 /**

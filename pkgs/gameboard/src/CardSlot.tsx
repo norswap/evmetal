@@ -163,11 +163,12 @@ function resolveLayout(layout: SlotLayoutKind | SlotLayout | undefined): Resolve
  * `STACKED` centers every card in the slot; `STAGGER_<corner>` offsets lower cards toward the slot interior by `steps`
  * multiples of the stagger offsets.
  *
- * When `centered`, the fan's bounding box is centered in the slot (the corner only sets the fan direction); otherwise
+ * When `centered`, the staggered cards' bounding box is centered in the slot (the corner only sets the stagger
+ * direction); otherwise
  * the top card is anchored flush in the named corner.
  *
  * With `grow`, the top card is the one in-flow card (`position: relative`), so it gives {@link layoutStyle}'s
- * shrink-wrap a base size; a transform reproduces its fanned position without perturbing that flow box. All other cards
+ * shrink-wrap a base size; a transform reproduces its staggered position without perturbing that flow box. All other cards
  * stay absolute and thus out of flow.
  */
 function cardStyle(layout: ResolvedLayout, index: number, total: number, grow: boolean): JSX.CSSProperties {
@@ -216,8 +217,8 @@ function cardStyle(layout: ResolvedLayout, index: number, total: number, grow: b
  * (and absolutely-positioned cards will overflow a fixed box).
  *
  * With `grow` the container shrink-wraps its in-flow top card (see {@link cardStyle}) and reserves padding for the
- * fan's spread, so the box's border edge tracks the fan's bounding box: `STAGGER_*` reserves the spread on the
- * fan-ward side(s), or split evenly on both sides when `centered`. `STACKED`, `FREE` and single-card slots need no
+ * spread, so the box's border edge tracks the staggered cards' bounding box: `STAGGER_*` reserves the spread on the
+ * staggered side(s), or split evenly on both sides when `centered`. `STACKED`, `FREE` and single-card slots need no
  * padding — for `FREE`, `grow` merely shrink-wraps whatever the consumer's `flex` / `grid` produces (as long as the
  * cards stay in flow).
  */
@@ -234,16 +235,16 @@ function layoutStyle(grow: boolean, layout: ResolvedLayout, numCards: number): J
         return { ...base, "padding-left": halfX, "padding-right": halfX, "padding-top": halfY, "padding-bottom": halfY }
     }
 
-    const fanX = `calc(${staggerX} * (${numCards} - 1))`
-    const fanY = `calc(${staggerY} * (${numCards} - 1))`
+    const spreadX = `calc(${staggerX} * (${numCards} - 1))`
+    const spreadY = `calc(${staggerY} * (${numCards} - 1))`
     switch (kind) {
         case "STAGGER_TL":
-            return { ...base, "padding-right": fanX, "padding-bottom": fanY }
+            return { ...base, "padding-right": spreadX, "padding-bottom": spreadY }
         case "STAGGER_TR":
-            return { ...base, "padding-left": fanX, "padding-bottom": fanY }
+            return { ...base, "padding-left": spreadX, "padding-bottom": spreadY }
         case "STAGGER_BL":
-            return { ...base, "padding-right": fanX, "padding-top": fanY }
+            return { ...base, "padding-right": spreadX, "padding-top": spreadY }
         case "STAGGER_BR":
-            return { ...base, "padding-left": fanX, "padding-top": fanY }
+            return { ...base, "padding-left": spreadX, "padding-top": spreadY }
     }
 }
