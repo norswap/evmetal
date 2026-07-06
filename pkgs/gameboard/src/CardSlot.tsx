@@ -1,11 +1,17 @@
 import { useDraggable, useDragOperation, useDroppable } from "@dnd-kit/solid"
 import { createMemo, For, type JSX } from "solid-js"
-import { type SlotLayout, type SlotLayoutKind, useGameBoard } from "./GameBoardContext"
+import {
+    type SlotLayout,
+    type SlotLayoutKind,
+    type StaggerLayout,
+    type StaggerMoreShadow,
+    useGameBoard,
+} from "./GameBoardContext"
 
 export interface CardSlotProps {
     /** Unique slot id within the board; a memorable one is minted if omitted. */
     id?: string
-    /** How the slot's cards are positioned, with its layout-specific options (default `{ kind: "STACKED" }`). A bare
+    /** How the slot's cards are positioned, with its layout-specific options (default `{ kind: "FREE" }`). A bare
      * {@link SlotLayoutKind} string is accepted as shorthand for the optionless `{ kind }`. */
     layout?: SlotLayoutKind | SlotLayout
     /** Whether to grow the slot size to accomodate all the cards (works with every layout).
@@ -42,9 +48,9 @@ export interface CardSlotProps {
  *   custom CSS properties (unitless integers, for `calc()`-driven placement).
  *   Note: the drag overlay (copy of the card that gets dragged around) is NOT a `.gb-card` (it's its content, whatever
  *   users pass to {@link GameBoardController#spawn}).
- * - `.gb-more` — added to the bottom-most displayed `.gb-card` only when `maxDisplayed` hides deeper cards in some
- *   layouts. Use it to style to signal the stack runs deeper. It carries a `--gb-hidden` custom property with the
- *   number of hidden cards.
+ * - `.gb-more` — added to the bottom-most displayed `.gb-card` whenever cards are hidden by `maxDisplayed`. It carries
+ *   a `--gb-hidden` custom property with the number of hidden cards. Use it to signal the stack runs deeper. If you use
+ *   {@link CardSlotProps#more}, this will get a default style (stagger of shadows).
  */
 export function CardSlot(props: CardSlotProps): JSX.Element {
     const board = useGameBoard()
@@ -56,13 +62,20 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
     const droppable = useDroppable({ id: slotId })
     const op = useDragOperation()
 
-    // The top `maxDisplayed` cards actually rendered, plus how many deeper ones are dropped from the DOM.
-    const displayed = createMemo((): { cards: string[], hidden: number } => {
+    /** cf. {@link Displayed} */
+    const displayed = createMemo((): Displayed => {
         const cards = board.slotContent[slotId]
-        const l = layout()
-        const max = "maxDisplayed" in l ? l.maxDisplayed : 0
-        if (max <= 0 || cards.length <= max) return { cards, hidden: 0 }
-        return { cards: cards.slice(cards.length - max), hidden: cards.length - max }
+        const max = layout().maxDisplayed || Number.POSITIVE_INFINITY
+        const draggedCard = op.source()?.id as string | undefined
+        const isDrag = draggedCard !== undefined && cards.includes(draggedCard)
+        // When dragging, one more card is included in the DOM to replace the hidden dragged card.
+        const numVisibleBeforeDrag = Math.min(cards.length, max)
+        const numRendered = Math.min(cards.length, max + (isDrag ? 1 : 0))
+        const numExtraBeforeDrag = cards.length - numVisibleBeforeDrag
+        const numExtra = cards.length - numRendered
+        const rendered = cards.slice(numExtra) // top cards are at the back of array
+        const draggedIndex = isDrag ? rendered.indexOf(draggedCard) : -1
+        return { rendered, draggedIndex, numExtra, numVisibleBeforeDrag, numExtraBeforeDrag }
     })
 
     // "none" unless a card from another slot is hovering here; then "ok"/"no" per the controller's drop predicate.
@@ -79,19 +92,16 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
             classList={{ "highlight-ok": dropValidity() === "ok", "highlight-no": dropValidity() === "no" }}
             ref={el => droppable.ref(el)}
         >
-            <div class="gb-layout" style={layoutStyle(props.grow ?? false, layout(), displayed().cards.length)}>
-                <For each={displayed().cards}>
-                    {(cardId, index) => (
+            <div class="gb-layout" style={layoutStyle(props.grow ?? false, layout(), displayed())}>
+                <For each={displayed().rendered}>
+                    {(cardId, i) => (
                         <Card
                             cardId={cardId}
                             layout={layout()}
-                            index={index()}
-                            total={displayed().cards.length}
+                            placement={cardPlacement(displayed(), i(), props.grow ?? false)}
                             isTop={cardId === board.topCardOf(slotId)}
-                            grow={props.grow ?? false}
                             isDrag={props.isDrag ?? true}
                             canDrag={props.canDrag}
-                            hidden={index() === 0 ? displayed().hidden : 0}
                         >
                             {board.renderCard(cardId)}
                         </Card>
@@ -102,20 +112,77 @@ export function CardSlot(props: CardSlotProps): JSX.Element {
     )
 }
 
+/**  Information about the cards to render in the DOM, with awareness of whether a card is being dragged out or not. */
+type Displayed = {
+    /** Cards that will be present in the DOM. Includes visible card and possibly the card being dragged out, which will
+     * be hidden. */
+    rendered: string[]
+    /** The index of the card being dragged away within rendered, or -1 if no drag. */
+    draggedIndex: number
+    /** Number of cards that will not be present in the DOM, but can be used for cues about slot depth. */
+    numExtra: number
+    /** If dragging, number of cards visible before the drag. Otherwise === {@link rendered}.length. */
+    numVisibleBeforeDrag: number
+    /** If dragging, number of extra (non-DOM) cards hidden before the drag. Otherwise === {@link numExtra}. */
+    numExtraBeforeDrag: number
+}
+
 /**
- * Wraps a card's component, positioning it per the slot layout, making it draggable (subject to `isDrag` /
+ * A card's stacking and fan geometry within its slot, derived from the slot's {@link Displayed} state and the card's
+ * position `i` in {@link Displayed.rendered}.
+ *
+ * A dragged card is kept in the DOM (hidden) at the slot it held at rest so @dnd-kit's overlay stays pinned to the
+ * pointer; the rest reflow to close its gap. So the ghost gets its *resting* geometry and every other card the
+ * *reflowed* one.
+ */
+type CardPlacement = {
+    /** Stacking index (z-order); also surfaced as `--gb-index` / `data-index`. */
+    index: number
+    /** Size of the fan this card lays out within; also `--gb-count`. */
+    numCards: number
+    /** In a `grow` slot, whether this is the single in-flow card that shrink-wraps the box. */
+    isAnchor: boolean
+    /** Hidden-card count feeding the centered shadow *spacing* — kept at the resting value so nothing jitters mid-drag. */
+    layoutHidden: number
+    /** Hidden-card count the "more" cue actually *draws*; nonzero only on the back card. */
+    cueHidden: number
+}
+
+/** cf. {@link CardPlacement} */
+function cardPlacement(d: Displayed, i: number, grow: boolean): CardPlacement {
+    const isDragging = d.draggedIndex >= 0
+    const isDraggedCard = i === d.draggedIndex
+
+    // TODO review below
+    // TODO: numCards: the hidden card will have a different story there for both index and numCards
+    // TODO do we need to separate our layouts?
+    // The ghost's resting slot: its rendered position, less the deeper cards the drag revealed beneath it.
+    const renderIndex = d.draggedIndex - (d.numExtraBeforeDrag - d.numExtra)
+    const index = isDraggedCard ? renderIndex : isDragging && i > d.draggedIndex ? i - 1 : i
+    const numCards = isDraggedCard ? d.numVisibleBeforeDrag : d.rendered.length - (isDragging ? 1 : 0)
+    // A grow slot keeps exactly one in-flow card — the top of the fan — to size the box: the ghost if it held that slot
+    // at rest, otherwise the reflowed top. That way the ghost never moves and the drag overlay stays pinned.
+    const anchorIsGhost = renderIndex === d.numVisibleBeforeDrag - 1
+    return {
+        index,
+        numCards,
+        isAnchor: grow && (isDraggedCard || !anchorIsGhost) && index === numCards - 1,
+        layoutHidden: isDraggedCard ? d.numExtraBeforeDrag : d.numExtra,
+        cueHidden: index === 0 && !isDraggedCard ? d.numExtra : 0,
+    }
+}
+
+/**
+ * Wraps a card's component, positioning it per {@link cardPlacement}, making it draggable (subject to `isDrag` /
  * `canDrag`), and hiding it while a drag is in flight (a drag overlay shows the moving render instead).
  */
 function Card(props: {
     cardId: string
     layout: ResolvedLayout
-    index: number
-    total: number
+    placement: CardPlacement
     isTop: boolean
-    grow: boolean
     isDrag: boolean | "top"
     canDrag?: (cardId: string) => boolean
-    hidden: number
     children?: JSX.Element
 }): JSX.Element {
     const draggable = useDraggable({
@@ -129,14 +196,15 @@ function Card(props: {
     return (
         <div
             class="gb-card"
-            classList={{ "gb-more": props.hidden > 0 }}
+            classList={{ "gb-more": props.placement.cueHidden > 0 }}
             data-card-id={props.cardId}
-            data-index={props.index}
+            data-index={props.placement.index}
             style={{
-                ...cardStyle(props.layout, props.index, props.total, props.grow),
-                "--gb-index": props.index,
-                "--gb-count": props.total,
-                "--gb-hidden": props.hidden,
+                ...cardStyle(props.layout, props.placement),
+                "--gb-index": props.placement.index,
+                "--gb-count": props.placement.numCards,
+                "--gb-hidden": props.placement.cueHidden,
+                "box-shadow": moreShadow(props.layout, props.placement.cueHidden),
                 visibility: draggable.isDragging() || draggable.isDropping() ? "hidden" : "visible",
             }}
             ref={el => draggable.ref(el)}
@@ -146,28 +214,68 @@ function Card(props: {
     )
 }
 
-/** A {@link SlotLayout} with the `STAGGER_*` options defaulted, so consumers can read them without fallbacks. */
-type ResolvedLayout = RequiredMembers<SlotLayout>
-
-// Needed to distribute over the SlotLayout union.
-type RequiredMembers<T> = T extends unknown ? Required<T> : never
+/**
+ * A {@link SlotLayout} with per-kind options defaulted, so consumers read them without fallbacks. `more` stays optional:
+ * `undefined` means no built-in overflow render (the consumer styles `.gb-more` themselves); otherwise it is fully
+ * defaulted.
+ */
+type ResolvedLayout =
+    | { kind: "FREE"; maxDisplayed: number }
+    | {
+    kind: StaggerLayout
+    staggerX: string
+    staggerY: string
+    centered: boolean
+    maxDisplayed: number
+    more?: Required<StaggerMoreShadow>
+}
 
 /**
  * Normalizes the `layout` prop (a bare {@link SlotLayoutKind} string, a {@link SlotLayout} object, or undefined) into a
- * {@link ResolvedLayout}, defaulting to `STACKED` and filling in the per-kind options.
+ * {@link ResolvedLayout}, defaulting to `FREE` and filling in the per-kind options.
  */
 function resolveLayout(layout: SlotLayoutKind | SlotLayout | undefined): ResolvedLayout {
-    const l: SlotLayout =
-        typeof layout === "string" ? ({ kind: layout } as SlotLayout) : (layout ?? { kind: "STACKED" })
-    if (l.kind === "STACKED") return { kind: l.kind }
+    const l: SlotLayout = typeof layout === "string" ? ({ kind: layout } as SlotLayout) : (layout ?? { kind: "FREE" })
     if (l.kind === "FREE") return { kind: l.kind, maxDisplayed: l.maxDisplayed ?? 0 }
+
+    const more = l.more && {
+        color: l.more.color ?? "#8f8f8f",
+        maxCount: l.more.maxCount ?? 3,
+        lightenStep: l.more.lightenStep ?? 0.3,
+        offsetX: l.more.offsetX ?? "5px",
+        offsetY: l.more.offsetY ?? "5px",
+    }
+
     return {
         kind: l.kind,
         staggerX: l.staggerX ?? "14px",
         staggerY: l.staggerY ?? "14px",
         centered: l.centered ?? false,
         maxDisplayed: l.maxDisplayed ?? 0,
+        more,
     }
+}
+
+/**
+ * The `box-shadow` for the built-in `.gb-more` cue when {@link SlotLayout#more} is set (otherwise returns `undefined`).
+ *
+ * Draws `min(hidden, maxCount)` layers offset diagonally towards the opposite corner, so the deck
+ * edge peeks on 2 sides. The layer nearest the card is lightest; each deeper layer is `lightenStep` less lightened
+ * toward white via `color-mix`, reaching the solid {@link MoreShadow#color}` only on a full stack.
+ */
+function moreShadow(layout: ResolvedLayout, hidden: number): string | undefined {
+    if (hidden <= 0 || layout.kind === "FREE" || !layout.more) return undefined
+    const { color, maxCount, lightenStep, offsetX, offsetY } = layout.more
+    const [dx, dy] = [
+        layout.kind === "STAGGER_TR" || layout.kind === "STAGGER_BR" ? -1 : 1,
+        layout.kind === "STAGGER_BL" || layout.kind === "STAGGER_BR" ? -1 : 1,
+    ]
+    const layers: string[] = []
+    for (let i = 1; i <= Math.min(hidden, maxCount); i++) {
+        const c = `color-mix(in srgb, ${color}, white ${(maxCount - i) * lightenStep * 100}%)`
+        layers.push(`calc(${dx} * ${offsetX} * ${i}) calc(${dy} * ${offsetY} * ${i}) 0 0 ${c}`)
+    }
+    return layers.join(", ")
 }
 
 /**
@@ -178,36 +286,31 @@ function resolveLayout(layout: SlotLayoutKind | SlotLayout | undefined): Resolve
  *
  * Otherwise, `z-index = index`, so the top (last) card is front-most.
  *
- * `STACKED` centers every card in the slot; `STAGGER_<corner>` offsets lower cards toward the slot interior by `steps`
- * multiples of the stagger offsets.
+ * `STAGGER_<corner>` offsets lower cards towards the opposite corner by `steps` multiples of the stagger offsets.
  *
- * When `centered`, the staggered cards' bounding box is centered in the slot (the corner only sets the stagger
- * direction); otherwise
+ * When `centered`, the stack's cards (including the shadows cue for hidden cards) are centered in the slot; otherwise
  * the top card is anchored flush in the named corner.
  *
  * With `grow`, the top card is the one in-flow card (`position: relative`), so it gives {@link layoutStyle}'s
  * shrink-wrap a base size; a transform reproduces its staggered position without perturbing that flow box. All other cards
  * stay absolute and thus out of flow.
  */
-function cardStyle(layout: ResolvedLayout, index: number, total: number, grow: boolean): JSX.CSSProperties {
+function cardStyle(layout: ResolvedLayout, p: CardPlacement): JSX.CSSProperties {
     if (layout.kind === "FREE") return {}
 
-    const isAnchor = grow && index === total - 1
-
-    if (layout.kind === "STACKED") {
-        if (isAnchor) return { position: "relative", "z-index": index }
-        return { position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", "z-index": index }
-    }
-
+    const { index, numCards, isAnchor, layoutHidden } = p
     const { kind, staggerX: sx, staggerY: sy, centered } = layout
-    const steps = total - 1 - index
+    const steps = numCards - 1 - index
     const base = { position: "absolute" as const, "z-index": index }
 
     if (centered) {
         const dirX = kind === "STAGGER_TR" || kind === "STAGGER_BR" ? -1 : 1
         const dirY = kind === "STAGGER_BL" || kind === "STAGGER_BR" ? -1 : 1
-        const ox = `calc(${dirX} * ${sx} * (${steps} - (${total} - 1) / 2))`
-        const oy = `calc(${dirY} * ${sy} * (${steps} - (${total} - 1) / 2))`
+        const numShadows = layout.more ? Math.min(layoutHidden, layout.more.maxCount) : 0
+        const biasX = numShadows > 0 && layout.more ? ` - ${layout.more.offsetX} * ${numShadows} / 2` : ""
+        const biasY = numShadows > 0 && layout.more ? ` - ${layout.more.offsetY} * ${numShadows} / 2` : ""
+        const ox = `calc(${dirX} * (${sx} * (${steps} - (${numCards} - 1) / 2)${biasX}))`
+        const oy = `calc(${dirY} * (${sy} * (${steps} - (${numCards} - 1) / 2)${biasY}))`
         if (isAnchor) return { position: "relative", transform: `translate(${ox}, ${oy})`, "z-index": index }
         return { ...base, top: "50%", left: "50%", transform: `translate(-50%, -50%) translate(${ox}, ${oy})` }
     }
@@ -231,30 +334,50 @@ function cardStyle(layout: ResolvedLayout, index: number, total: number, grow: b
 /**
  * Style for the `.gb-layout` container the cards live in.
  *
- * Without `grow` it only establishes the positioning context; the slot's size then comes entirely from consumer CSS
+ * Without `grow` it's only `{ position: relative }`. The slot's size then comes entirely from consumer CSS
  * (and absolutely-positioned cards will overflow a fixed box).
  *
- * With `grow` the container shrink-wraps its in-flow top card (see {@link cardStyle}) and reserves padding for the
- * spread, so the box's border edge tracks the staggered cards' bounding box: `STAGGER_*` reserves the spread on the
- * staggered side(s), or split evenly on both sides when `centered`. `STACKED`, `FREE` and single-card slots need no
- * padding — for `FREE`, `grow` merely shrink-wraps whatever the consumer's `flex` / `grid` produces (as long as the
- * cards stay in flow).
+ * With `grow` the container fits its content, either using the regular CSS rules in a `FREE` layout, or computing the
+ * rendered size of the entire stack in the `STAGGER_*` layout.
+ *
+ * In staggered layouts, if {@link SlotLayout#centered} is set, will also set padding so that stack is visually centered
+ * in the container. Otherwise the stack will anchor to its corner (e.g. `STAGGER_TL` to the top left).
  */
-function layoutStyle(grow: boolean, layout: ResolvedLayout, numCards: number): JSX.CSSProperties {
+function layoutStyle(grow: boolean, layout: ResolvedLayout, displayed: Displayed): JSX.CSSProperties {
     if (!grow) return { position: "relative" }
-    const base: JSX.CSSProperties = { position: "relative", width: "fit-content", height: "fit-content" }
-    if (numCards <= 1 || layout.kind === "STACKED" || layout.kind === "FREE") return base
+
+    const numVisible = displayed.numVisibleBeforeDrag // see explanation below
+    // TODO check what this actually does (and if the explanation below is correct)
+    // const numVisible = displayed.rendered.length
+
+    const base = { position: "relative", width: "fit-content", height: "fit-content" } as const
+    if (numVisible <= 1 || layout.kind === "FREE") return base
+
+    // In a staggered layout, we size by fitting the "in-flow" content, which is the top card in the slot and by adding
+    // padding to accomodate the staggered cards (and potentially the shadows that cue that there are extra cards not
+    // rendered).
+    //
+    // If we're dragging, we must use the number of visible & extra cards *before* dragging.
+    // This might cause the padding to be slightly excessive for a strict content-fit, but it is required.
+    // Without it, the location of the card being dragged (now hidden) would shift on drag, causing the drag overlay
+    // to also shift.
 
     const { kind, staggerX, staggerY, centered } = layout
 
+    const spreadX = `calc(${staggerX} * (${numVisible} - 1))`
+    const spreadY = `calc(${staggerY} * (${numVisible} - 1))`
+
     if (centered) {
-        const halfX = `calc(${staggerX} * (${numCards} - 1) / 2)`
-        const halfY = `calc(${staggerY} * (${numCards} - 1) / 2)`
+        const numShadows = layout.more ? Math.min(displayed.numExtraBeforeDrag, layout.more.maxCount) : 0
+        // TODO check what this actually does
+        // const numShadows = layout.more ? Math.min(displayed.numExtra, layout.more.maxCount) : 0
+        const shadowX = numShadows <= 0 ? "0" : `${layout.more!.offsetX} * ${numShadows}`
+        const shadowY = numShadows <= 0 ? "0" : `${layout.more!.offsetY} * ${numShadows}`
+        const halfX = `calc((${spreadX} + ${shadowX}) / 2)`
+        const halfY = `calc((${spreadY} + ${shadowY}) / 2)`
         return { ...base, "padding-left": halfX, "padding-right": halfX, "padding-top": halfY, "padding-bottom": halfY }
     }
 
-    const spreadX = `calc(${staggerX} * (${numCards} - 1))`
-    const spreadY = `calc(${staggerY} * (${numCards} - 1))`
     switch (kind) {
         case "STAGGER_TL":
             return { ...base, "padding-right": spreadX, "padding-bottom": spreadY }

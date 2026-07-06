@@ -61,21 +61,11 @@
             cursor: grab;
         }
 
-        /* `maxDisplayed` overflow cue: progressively darker grey slivers peeking out behind the bottom displayed card,
-           offset in the direction the stagger runs (set per corner via --dx / --dy). Kept grey (not white) so they read
-           as the compressed edge of a deck underneath, distinct from the white face-up cards of the stagger fan. */
+        /* The overflow cue's box-shadow (rendered by the layout's `more` option) tracks this element's border-radius;
+           match the card so the deck-edge shadows are rounded too. */
         .gb-more {
-            --edge: 5px;
             border-radius: 8px;
-            box-shadow:
-                calc(var(--dx) * var(--edge)) calc(var(--dy) * var(--edge)) 0 0 #cfcfcf,
-                calc(var(--dx) * var(--edge) * 2) calc(var(--dy) * var(--edge) * 2) 0 0 #b0b0b0,
-                calc(var(--dx) * var(--edge) * 3) calc(var(--dy) * var(--edge) * 3) 0 0 #8f8f8f;
         }
-
-        .demo-tl { --dx: 1; --dy: 1; }
-        .demo-tr { --dx: -1; --dy: 1; }
-        .demo-br { --dx: -1; --dy: -1; }
 
         .demo-rows {
             display: flex;

@@ -4,20 +4,43 @@ import { createStore, produce, type SetStoreFunction } from "solid-js/store"
 import { freshId, recordId } from "#src/utils"
 
 /**
- * The positioning strategy for a slot's cards, without any options. `STACKED` centers every card; `STAGGER_*` staggers
- * them toward the named corner; `FREE` applies no positioning, leaving card placement to consumer CSS (see
- * {@link CardSlot}). See {@link SlotLayout} for the option-carrying form used by the `layout` prop.
+ * The positioning strategy for a slot's cards, without any options. `STAGGER_*` staggers them toward the named corner;
+ * `FREE` applies no positioning, leaving card placement to consumer CSS (see {@link CardSlot}). See {@link SlotLayout}
+ * for the option-carrying form used by the `layout` prop.
  */
-export type SlotLayoutKind = "STACKED" | "FREE" | StaggerLayout
+export type SlotLayoutKind = "FREE" | StaggerLayout
 
 /** The corner-staggering subset of {@link SlotLayoutKind} — the only layouts that accept stagger options. */
 export type StaggerLayout = "STAGGER_TL" | "STAGGER_TR" | "STAGGER_BL" | "STAGGER_BR"
 
 /**
+ * Shared options for the built-in `.gb-more` overflow cue: a fan of drop shadows peeking out from under the bottom-most
+ * displayed card to suggest the cards hidden by `maxDisplayed`. `min(hidden, maxCount)` shadows are drawn; the one
+ * nearest the card is lightest and each deeper layer is `lightenStep` less
+ * lightened toward white, reaching the solid `color` only once the stack is full. Leave the whole `more` option unset to
+ * render no built-in cue — the `.gb-more` class and `--gb-hidden` count are still exposed so you can style it yourself.
+ */
+export interface MoreShadow {
+    /** Deepest (most saturated) shadow color; shallower layers are lightened toward white. Default `"#8f8f8f"`. */
+    color?: string
+    /** Maximum number of shadow layers drawn. Default `3`. */
+    maxCount?: number
+    /** Fraction in `[0, 1]` lightened toward white per layer step. Default `0.3`. */
+    lightenStep?: number
+}
+
+/** {@link MoreShadow} for `STAGGER_*`: shadows step diagonally toward the slot interior (the stagger direction). */
+export interface StaggerMoreShadow extends MoreShadow {
+    /** Per-layer x-offset magnitude as a CSS unit; direction follows the corner. Default `"5px"`. */
+    offsetX?: string
+    /** Per-layer y-offset magnitude as a CSS unit; direction follows the corner. Default `"5px"`. */
+    offsetY?: string
+}
+
+/**
  * A slot layout together with the options that only make sense for it.
  */
 export type SlotLayout =
-    | { kind: "STACKED" }
     | { kind: "FREE"; maxDisplayed?: number }
     | {
           kind: StaggerLayout
@@ -30,6 +53,8 @@ export type SlotLayout =
           /** Caps how many cards are rendered. When cards are hidden, the bottom-most displayed card gets the
            * `.gb-more` class and a `--gb-hidden` count for styling (see {@link CardSlot}). Omit or 0 for no cap. */
           maxDisplayed?: number
+          /** Built-in overflow cue for the cards hidden by `maxDisplayed`. */
+          more?: StaggerMoreShadow
       }
 
 /**

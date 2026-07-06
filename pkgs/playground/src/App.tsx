@@ -26,6 +26,9 @@ function Setup(): JSX.Element {
         spawnCard(board, "deck", "2♣", "black")
         spawnCard(board, "deck", "7♦", "red")
         spawnCard(board, "deck", "Q♠", "black")
+        spawnCard(board, "deck", "5♣", "black")
+        spawnCard(board, "deck", "9♥", "red")
+        spawnCard(board, "deck", "K♠", "black")
         spawnCard(board, "hand", "A♠", "black")
         spawnCard(board, "hand", "10♥", "red")
         spawnCard(board, "hand", "J♦", "red")
@@ -66,11 +69,10 @@ export function App(): JSX.Element {
             <h1>Gameboard</h1>
             <ul>
                 <li>
-                    <b>Deck</b> is stacked and deals from the tophand.
+                    <b>Deck</b> uses a staggered layout that only shows 1 card.
                 </li>
                 <li>
-                    <b>Discard</b> and <b>Locked</b> fan out (centered) in different directories and grow to fit their
-                    cards.
+                    <b>Discard</b> and <b>Locked</b> stagger out in different directions and grow to fit their cards.
                 </li>
                 <li>
                     <b>Discard</b> accepts only red cards.
@@ -79,41 +81,50 @@ export function App(): JSX.Element {
                     <b>Locked</b> can't be dragged out of.
                 </li>
                 <li>
-                    <b>Free</b> is a custom row layout.
+                    <b>Custom row</b> is a custom row layout.
                 </li>
                 <li>
-                    <b>Horizontal stagger</b> is a row layout using the <b>STAGGER_TR</b> layout and a large offset.
+                    <b>Stagger row</b> is a row layout using the <b>STAGGER_TR</b> layout and a large offset.
                 </li>
             </ul>
             <GameBoard>
                 <div class="demo-board">
                     <div class="demo-col">
-                        <span class="demo-label">Deck (STACKED, top only)</span>
-                        <CardSlot id="deck" layout="STACKED" isDrag="top" />
+                        <span class="demo-label">Deck (STAGGER_TL, max 1)</span>
+                        <CardSlot
+                            id="deck"
+                            layout={{
+                                kind: "STAGGER_TL",
+                                centered: true,
+                                maxDisplayed: 1,
+                                more: { offsetX: "3px", offsetY: "3px" },
+                            }}
+                            isDrag="top"
+                        />
                     </div>
-                    <div class="demo-col demo-tl">
+                    <div class="demo-col">
                         <span class="demo-label">Hand (STAGGER_TL, centered)</span>
                         <CardSlot
                             id="hand"
-                            layout={{ kind: "STAGGER_TL", centered: true, maxDisplayed: 4 }}
+                            layout={{ kind: "STAGGER_TL", centered: true, maxDisplayed: 4, more: {} }}
                             grow={true}
                             isDrag={true}
                         />
                     </div>
-                    <div class="demo-col demo-tr">
+                    <div class="demo-col">
                         <span class="demo-label">Discard (STAGGER_TR, centered, red only)</span>
                         <CardSlot
                             id="discard"
-                            layout={{ kind: "STAGGER_TR", centered: true, maxDisplayed: 4 }}
+                            layout={{ kind: "STAGGER_TR", centered: true, maxDisplayed: 4, more: {} }}
                             grow={true}
                             canDrop={src => cardMeta.get(src)?.color === "red"}
                         />
                     </div>
-                    <div class="demo-col demo-br">
+                    <div class="demo-col">
                         <span class="demo-label">Locked (STAGGER_BR, centered, no drag)</span>
                         <CardSlot
                             id="locked"
-                            layout={{ kind: "STAGGER_BR", centered: true, maxDisplayed: 4 }}
+                            layout={{ kind: "STAGGER_BR", centered: true, maxDisplayed: 4, more: {} }}
                             grow={true}
                             isDrag={false}
                         />

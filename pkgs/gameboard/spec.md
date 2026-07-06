@@ -26,15 +26,12 @@ The GameBoard manages the state via:
 - `id`: optional string identifying the CardSlot — error if not unique in the GameBoard (accross components in this lib)
     - if not provided, generate a random memorable name, e.g. using the unique-names-generator library
 - `layout`: an enum member of: `STAGGER_{TL,TR,BL,BR}` (representing the four corners: top left, etc — the top card is
-  fully visible in the specified corner, other cards are staggered below), or `STACKED` (only top card visible), `FREE`
-  (no layout applied, user controls via CSS), `STAGGER_BG_{TL,TR,BL,BR}` (use a rectangle with a class applied instead
-  of
-  rendering all cards in the stagger), `FANOUT_{TL,TR,BL,BR,TOP,BOT,LEFT,RIGHT}` laying the cards in a fan pattern, the
-  direction indicates where the narrow part of the fan points to (default: `FREE`)
-    - `staggerX`: if the layout is `STAGGER_XX` or `STAGGER_BG_XX`, the x-offset for each staggered card (as a CSS unit)
+  fully visible in the specified corner, other cards are staggered below), `FREE`
+  (no layout applied, user controls via CSS), `FANOUT_{TL,TR,BL,BR,TOP,BOT,LEFT,RIGHT}` laying the cards in a fan
+  pattern, the direction indicates where the narrow part of the fan points to (default: `FREE`)
+    - `staggerX`: if the layout is `STAGGER_XX`, the x-offset for each staggered card (as a CSS unit)
     - `staggerY`: idem for y-offset
     - need similar parameters to control fanout (will figure out later)
-    - `staggerClass`: class class applied to the rectangle representing bottom cards when using `STAGGER_BG_XX`
 - `dragZone`: if `isDrop == true`, either "rect" (full rectangular area of this slot), or a number that indicates a
   minimum number of "ghost cards" to define a drag area: the drag area will be the area that that number of cards would
   cover, if there are less
@@ -44,8 +41,8 @@ The GameBoard manages the state via:
     - true (default) if all cards can be dragged
     - false if no cards can be dragged
     - "top" if only the top card can be dragged
-        - note that in some layouts (like `STACKED` or `STAGGERED_XXXXX` with narrow offsets) you will only be able to
-          select the top card even if the value is `true`
+        - note that in some layouts (like `STAGGER_XX` with narrow offsets, or `maxDisplayed: 1`) you will only be able
+          to select the top card even if the value is `true`
 - `canDrag`: a function passed a card id, determining if it can be dragged (after applying the `isDrag` criteria)
 - `isDrop`:
     - true: cards can be dragged anywhere into this slot
