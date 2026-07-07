@@ -72,3 +72,5 @@
 
 - As you work, make sure to regularly make sure the code still builds (`make build`).
 - Don't forget to lint (`make lint` and `make lintfix`).
+- When starting a dev server (`make dev`), always pass a random free port (e.g. `make dev port=3007`) instead of the
+  default 3000, so that multiple agents running in the same container don't conflict on the same port.
