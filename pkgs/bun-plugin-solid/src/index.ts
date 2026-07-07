@@ -4,6 +4,8 @@ import type { PluginItem, TransformOptions } from "@babel/core"
 import tsPreset from "@babel/preset-typescript"
 import solidPreset, { type BabelPresetSolidOptions } from "babel-preset-solid"
 import type { BunPlugin } from "bun"
+import solidRefresh from "solid-refresh/babel"
+import bunHotShim from "./bun-hot-shim"
 
 type SolidPluginOptions = {
     /**
@@ -28,6 +30,15 @@ type SolidPluginOptions = {
     sourceMaps?: boolean | "inline"
 
     /**
+     * Enables Solid's HMR integration (`solid-refresh`) so components hot-swap in place while preserving state. Without
+     * it, changes to Solid-transformed modules are not picked up.
+     *
+     * Disable this in prod builds, as it adds overhead.
+     * Defaults to `false` in programmatic usage, and `true` when this plugin is picked up via `bunfig.toml`.
+     */
+    hot?: boolean
+
+    /**
      * Whether to enable debug logging.
      * Defaults to `false`.
      */
@@ -49,6 +60,7 @@ export const solidPluginOptions: SolidPluginOptions = {
     generate: "dom",
     hydratable: true,
     sourceMaps: "inline",
+    hot: true,
     debug: false,
     babelOptions: {},
 }
@@ -62,6 +74,7 @@ function SolidPlugin_(opts: SolidPluginOptions = {}, isDefault = false): BunPlug
         opts.generate ??= "dom"
         opts.hydratable ??= true
         opts.sourceMaps ??= "inline"
+        opts.hot ??= false
         opts.debug ??= false
         opts.babelOptions ??= {}
     }
@@ -75,6 +88,15 @@ function SolidPlugin_(opts: SolidPluginOptions = {}, isDefault = false): BunPlug
         setup: build => {
             let babel: typeof import("@babel/core") | undefined
             let babelTransformPresets: PluginItem[] | undefined
+            let babelTransformPlugins: PluginItem[] | undefined
+
+            if (opts.hot) {
+                // The transformed app code imports the `solid-refresh` runtime by bare specifier, but that package is a
+                // dependency of THIS plugin, not of the app being bundled — so the app's module graph can't resolve it.
+                // Redirect the specifier to the copy this plugin owns, keeping HMR self-contained for consumers.
+                const solidRefreshRuntime = Bun.resolveSync("solid-refresh", import.meta.dir)
+                build.onResolve({ filter: /^solid-refresh$/ }, () => ({ path: solidRefreshRuntime }))
+            }
 
             build.onLoad({ filter: /\.[tj]sx$/ }, async ({ path }) => {
                 // Memoized lazy import of babel
@@ -85,24 +107,47 @@ function SolidPlugin_(opts: SolidPluginOptions = {}, isDefault = false): BunPlug
                         [tsPreset, {}],
                         [solidPreset, { generate: opts.generate, hydratable: opts.hydratable }],
                     ]
+                    // `solid-refresh` must run as a plugin (before the preset) so it can wrap components before
+                    // `babel-preset-solid` lowers their JSX. The `vite` target is the one whose runtime speaks
+                    // `import.meta.hot` (the others use `module.hot`/`import.meta.webpackHot`); `bunHotShim` then adapts
+                    // it to Bun's stricter literal-only form in the second pass below.
+                    babelTransformPlugins = opts.hot ? [[solidRefresh, { bundler: "vite" }]] : []
                 }
 
                 debugLog(`Transforming: ${path}`)
                 const start = performance.now()
 
-                const result = await babel.transformFileAsync(path, {
+                let result = await babel.transformFileAsync(path, {
                     presets: babelTransformPresets,
+                    plugins: babelTransformPlugins,
                     filename: path,
                     sourceMaps: opts.sourceMaps,
                     ...opts.babelOptions,
                 })
 
-                const end = performance.now()
-                debugLog(`Transformed: ${path} in ${Math.round(end - start)}ms`)
-
                 if (!result?.code) {
                     throw Error(`No code for: ${path}`)
                 }
+
+                if (opts.hot) {
+                    // Second pass: rewrite `solid-refresh`'s `import.meta.hot` hand-off into a Bun-literal shim. This is
+                    // separate because `solid-refresh` inserts that call at `Program` exit, so it only exists once the
+                    // first transform has fully finished. See `bunHotShim` for why the rewrite is necessary.
+                    result = await babel.transformAsync(result.code, {
+                        plugins: [bunHotShim],
+                        filename: path,
+                        sourceMaps: opts.sourceMaps,
+                        inputSourceMap: (result.map ?? undefined) as never,
+                        configFile: false,
+                        babelrc: false,
+                    })
+                    if (!result?.code) {
+                        throw Error(`No code for: ${path}`)
+                    }
+                }
+
+                const end = performance.now()
+                debugLog(`Transformed: ${path} in ${Math.round(end - start)}ms`)
 
                 return {
                     loader: "js",

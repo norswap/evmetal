@@ -26,7 +26,8 @@
     "dependencies": {
         "@babel/core": "^7.29.7",
         "@babel/preset-typescript": "^7.29.7",
-        "babel-preset-solid": "^1.9.12"
+        "babel-preset-solid": "^1.9.12",
+        "solid-refresh": "^0.7.8"
     },
     "devDependencies": {
         "@types/babel__core": "^7.20.5",
