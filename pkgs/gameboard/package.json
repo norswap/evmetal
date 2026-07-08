@@ -39,6 +39,7 @@
     },
     "devDependencies": {
         "@bunup/dts": "catalog:",
+        "@dnd-kit/dom": "catalog:",
         "@dnd-kit/solid": "catalog:",
         "@types/bun": "catalog:",
         "bun-plugin-solid": "workspace:",
@@ -46,6 +47,7 @@
         "typescript": "catalog:"
     },
     "peerDependencies": {
+        "@dnd-kit/dom": "catalog:",
         "@dnd-kit/solid": "catalog:",
         "solid-js": "catalog:"
     }

@@ -1,10 +1,8 @@
 export { CardSlot, type CardSlotProps } from "#src/CardSlot"
 export { GameBoard } from "#src/GameBoard"
-export {
-    GameBoardController,
-    type SlotConfig,
-    type SlotLayout,
-    type SlotLayoutKind,
-    type StaggerLayout,
-    useGameBoard,
-} from "#src/GameBoardContext"
+export { useGameBoard } from "#src/GameBoardContext"
+export { type DragPlaceholderMode, GameBoardController } from "#src/GameBoardController"
+export type { SlotLayout } from "#src/layout"
+export type { SlotLayoutFree } from "#src/layouts/free"
+export type { CueExtra, SlotLayoutStagger } from "#src/layouts/stagger"
+export type { CardId, SlotId } from "#src/utils"
