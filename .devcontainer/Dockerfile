@@ -2,6 +2,8 @@ FROM mcr.microsoft.com/devcontainers/base:debian-12
 
 ARG BUN_VERSION=1.3.11
 
+ARG AST_GREP_VERSION=0.44.1
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         make \
         build-essential \
@@ -10,11 +12,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Install cx binary to /usr/local/bin
+RUN curl -fsSL https://raw.githubusercontent.com/ind-igo/cx/master/install.sh | sh
+
 USER vscode
 ENV BUN_INSTALL=/home/vscode/.bun
 ENV PATH=/home/vscode/.local/bin:$BUN_INSTALL/bin:$PATH
 RUN curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"
 RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN bun install -g --trust @ast-grep/cli@${AST_GREP_VERSION}
 
 ########################################################################################################################
 # Bake PlayWright MCP into the image
